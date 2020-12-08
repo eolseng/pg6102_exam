@@ -2,14 +2,12 @@ package no.id10022.pg6102.auth
 
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import no.id10022.pg6102.auth.config.authExchangeName
-import no.id10022.pg6102.auth.config.newUserRK
 import no.id10022.pg6102.auth.db.UserService
 import no.id10022.pg6102.auth.dto.AuthDto
+import no.id10022.pg6102.utils.amqp.authExchangeName
+import no.id10022.pg6102.utils.amqp.newUserRK
 import no.id10022.pg6102.utils.rest.RestResponseFactory
 import no.id10022.pg6102.utils.rest.WrappedResponse
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -27,10 +25,10 @@ import java.net.URI
 @RestController
 @RequestMapping("/api/v1/auth")
 class RestApi(
-        private val service: UserService,
-        private val authManager: AuthenticationManager,
-        private val userDetailsServiceBean: UserDetailsService,
-        private val rabbitMQ: RabbitTemplate
+    private val service: UserService,
+    private val authManager: AuthenticationManager,
+    private val userDetailsServiceBean: UserDetailsService,
+    private val rabbitMQ: RabbitTemplate
 ) {
 
     @ApiOperation("Retrieve name and roles of signed in user")
@@ -44,8 +42,9 @@ class RestApi(
 
     @ApiOperation("Create a new user")
     @PostMapping(
-            path = ["/signup"],
-            consumes = [(MediaType.APPLICATION_JSON_VALUE)])
+        path = ["/signup"],
+        consumes = [(MediaType.APPLICATION_JSON_VALUE)]
+    )
     fun signup(@RequestBody dto: AuthDto): ResponseEntity<WrappedResponse<Void>> {
 
         // Extract data from the DTO - lower casing for easier logons
@@ -78,8 +77,9 @@ class RestApi(
 
     @ApiOperation("Login a registered user")
     @PostMapping(
-            path = ["/login"],
-            consumes = [(MediaType.APPLICATION_JSON_VALUE)])
+        path = ["/login"],
+        consumes = [(MediaType.APPLICATION_JSON_VALUE)]
+    )
     fun login(@RequestBody dto: AuthDto): ResponseEntity<WrappedResponse<Void>> {
 
         // Extract data from the DTO
