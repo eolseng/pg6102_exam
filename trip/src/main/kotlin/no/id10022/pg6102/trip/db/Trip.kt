@@ -43,7 +43,6 @@ class Trip(
 
 )
 {
-
     @Transient
     var duration: Map<ChronoUnit, Long> = mapOf()
         private set
@@ -57,5 +56,4 @@ class Trip(
             map[ChronoUnit.MINUTES] = minutes
             return map
         }
-
 }

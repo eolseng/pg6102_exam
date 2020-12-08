@@ -6,4 +6,9 @@ package no.id10022.pg6102.utils.amqp
 
 // Auth service
 const val authExchangeName = "travel-agency.auth.dx"
-const val newUserRK = "new_user"
+const val createUserRK = "create_user"
+
+// Trip service
+const val tripExchangeName = "travel-agency.trip.dx"
+const val createTripRK = "create_trip"
+const val deleteTripRK = "delete_trip"
