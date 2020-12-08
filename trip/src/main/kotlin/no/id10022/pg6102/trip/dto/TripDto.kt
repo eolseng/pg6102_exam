@@ -24,7 +24,7 @@ data class TripDto(
     var end: LocalDateTime? = null,
 
     @get:ApiModelProperty("The duration of the Trip")
-    var duration: Map<String, Long>? = null,
+    var duration: Map<String, Int>? = null,
 
     @get:ApiModelProperty("The price per person of the Trip")
     var price: Int? = null,
@@ -50,7 +50,7 @@ fun TripDto.isValidForRegistration(): Boolean {
     if (description.isEmpty()) return false
     if (location.isEmpty()) return false
     if (start < LocalDateTime.now()) return false
-    if (end > start) return false
+    if (end < start) return false
     if (price < 0 || price > Int.MAX_VALUE) return false
     if (capacity < 1 || capacity > Int.MAX_VALUE) return false
 

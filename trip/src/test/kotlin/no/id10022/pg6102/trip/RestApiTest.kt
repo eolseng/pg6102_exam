@@ -1,0 +1,244 @@
+package no.id10022.pg6102.trip
+
+import io.restassured.RestAssured
+import io.restassured.http.ContentType
+import io.restassured.response.Response
+import no.id10022.pg6102.trip.db.TripRepository
+import no.id10022.pg6102.trip.dto.TripDto
+import org.hamcrest.CoreMatchers
+import org.junit.Assert.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.junit.jupiter.SpringExtension
+import java.time.LocalDateTime
+import kotlin.random.Random
+
+@ActiveProfiles("test")
+@ExtendWith(SpringExtension::class)
+@SpringBootTest(
+    classes = [(TripApplication::class)],
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+class RestApiTest {
+
+    @LocalServerPort
+    protected var port = 0
+
+    @Autowired
+    lateinit var repo: TripRepository
+
+    @BeforeEach
+    @AfterEach
+    fun setup() {
+        // Setup RestAssured
+        RestAssured.baseURI = "http://localhost"
+        RestAssured.port = port
+        RestAssured.basePath = TRIPS_PATH
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
+        // Clear repository
+        repo.deleteAll()
+    }
+
+    companion object {
+        // Generates unique IDs
+        private var idCounter = 1
+        fun getId(): Int {
+            return idCounter++
+        }
+    }
+
+    fun registerTrip(
+        startDelay: Long = 0,
+        durationInMinutes: Long = Random.nextLong(30, 14440),
+        price: Int = Random.nextInt(25, 500),
+        capacity: Int = Random.nextInt(1, 20)
+    ): Long {
+        // Create the DTO
+        val id = getId()
+        val start = LocalDateTime.now().plusDays(1 + startDelay)
+        val dto = TripDto(
+            title = "test_title_$id",
+            description = "test_description_$id",
+            location = "test_location_$id",
+            start = start,
+            end = start.plusMinutes(durationInMinutes),
+            price = price,
+            capacity = capacity
+        )
+        // Register the Trip and extract the Location Header
+        val redirect =
+            RestAssured.given()
+                .auth().basic("admin", "admin")
+                .contentType(ContentType.JSON)
+                .body(dto)
+                .post()
+                .then().assertThat()
+                .statusCode(201)
+                .extract()
+                .header("Location")
+        // Extract the ID from the Location Header and return it
+        return redirect.substringAfter("${RestAssured.basePath}/").toLong()
+    }
+
+    @Test
+    fun `register Trip`() {
+        val id = registerTrip()
+        val trip = repo.findById(id)
+        assertTrue(trip.isPresent)
+    }
+
+    @Test
+    fun `retrieve Trip by id`() {
+        val id = registerTrip()
+        val trip = repo.findById(id).get()
+
+        RestAssured.given()
+            .accept(ContentType.JSON)
+            .get("/$id")
+            .then().assertThat()
+            .statusCode(200)
+            .body("data.id", CoreMatchers.equalTo(id.toInt()))
+            .body("data.title", CoreMatchers.equalTo(trip.title))
+            .body("data.description", CoreMatchers.equalTo(trip.description))
+            .body("data.location", CoreMatchers.equalTo(trip.location))
+            .body("data.duration.days", CoreMatchers.equalTo(trip.duration["days"]))
+            .body("data.duration.hours", CoreMatchers.equalTo(trip.duration["hours"]))
+            .body("data.duration.minutes", CoreMatchers.equalTo(trip.duration["minutes"]))
+            .body("data.price", CoreMatchers.equalTo(trip.price))
+            .body("data.capacity", CoreMatchers.equalTo(trip.capacity))
+    }
+
+    @Test
+    fun `get all Trips - single page`() {
+        val amount = 10
+        // Register n Trips
+        for (x in 0 until amount) {
+            registerTrip()
+        }
+        // Verify with repository
+        assertEquals(amount, repo.count().toInt())
+
+        RestAssured.given()
+            .accept(ContentType.JSON)
+            .get("?amount=${amount + 1}")
+            .then().assertThat()
+            .statusCode(200)
+            .body("data.list.size()", CoreMatchers.equalTo(amount))
+            .body("data.next", CoreMatchers.nullValue())
+    }
+
+    @Test
+    fun `get all Trips - multiple pages`() {
+        val pages = 4
+        val pageSize = 5
+        val total = pages * pageSize
+        val uniqueIds = mutableSetOf<Long>()
+
+        // Register n Trips
+        for (x in 0 until total) {
+            registerTrip()
+        }
+        // Verify with repository
+        assertEquals(total, repo.count().toInt())
+        // Get first page
+        var res = RestAssured.given()
+            .accept(ContentType.JSON)
+            .get("?amount=$pageSize")
+            .then().assertThat()
+            .statusCode(200)
+            .body("data.list.size()", CoreMatchers.equalTo(pageSize))
+            .body("data.next", CoreMatchers.anything())
+            .extract()
+            .response()
+        var dtos = res.getTrips()
+        var next = res.getNextLink()
+        // Add IDs to unique ID list
+        uniqueIds.addAll(dtos.map { it.id!! })
+        // Check the ordering
+        dtos.checkOrder()
+        // Check rest of the pages
+        while (next != null) {
+            res = RestAssured.given()
+                .accept(ContentType.JSON)
+                .basePath("")
+                .get(next)
+                .then().assertThat()
+                .statusCode(200)
+                .extract()
+                .response()
+            dtos = res.getTrips()
+            next = res.getNextLink()
+            // Add IDs to unique ID list
+            uniqueIds.addAll(dtos.map { it.id!! })
+            // Check the ordering
+            dtos.checkOrder()
+        }
+        // Check that all Trips have been retrieved
+        assertEquals(total, uniqueIds.size)
+    }
+
+    @Test
+    fun `delete Trip by id`() {
+
+        val id = registerTrip()
+        assertTrue(repo.existsById(id))
+
+        // Not authenticated
+        RestAssured.given()
+            .accept(ContentType.JSON)
+            .delete("/$id")
+            .then().assertThat()
+            .statusCode(401)
+
+        // As User
+        RestAssured.given()
+            .auth().basic("user", "user")
+            .accept(ContentType.JSON)
+            .delete("/$id")
+            .then().assertThat()
+            .statusCode(403)
+
+        // As Admin
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .accept(ContentType.JSON)
+            .delete("/$id")
+            .then().assertThat()
+            .statusCode(204)
+
+        // Invalid ID
+        val invalidId = id + 1337
+        assertFalse(repo.existsById(invalidId))
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .accept(ContentType.JSON)
+            .delete("/$invalidId")
+            .then().assertThat()
+            .statusCode(404)
+
+    }
+
+    fun Response.getTrips(): List<TripDto> {
+        return this.jsonPath().getList("data.list", TripDto::class.java)
+    }
+
+    fun Response.getNextLink(): String? {
+        return this.jsonPath().get("data.next")
+    }
+
+    fun List<TripDto>.checkOrder() {
+        for (i in 0 until this.size - 1) {
+            assertTrue(this[i].start!! <= this[i + 1].start!!)
+            if (this[i].start!! == this[i + 1].start!!) {
+                assertTrue(this[i].id!! <= this[i + 1].id!!)
+            }
+        }
+    }
+
+}

@@ -14,7 +14,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
             // Exception Handling
-            .exceptionHandling().authenticationEntryPoint { req, res, err ->
+            .exceptionHandling().authenticationEntryPoint { _, res, _ ->
                 res.setHeader("WWW-Authenticate", "cookie")
                 res.sendError(401)
             }

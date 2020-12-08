@@ -8,21 +8,24 @@ internal class TripTest {
     @Test
     fun testDuration() {
 
-        val durationDays = 2L
-        val durationHours = 3L
-        val durationMinutes = 45L
+        val durationDays = 2
+        val durationHours = 3
+        val durationMinutes = 45
 
         val start = LocalDateTime.now()
-        val end = start.plusDays(durationDays).plusHours(durationHours).plusMinutes(durationMinutes)
+        val end = start
+            .plusDays(durationDays.toLong())
+            .plusHours(durationHours.toLong())
+            .plusMinutes(durationMinutes.toLong())
 
         val trip = Trip(
             start = start,
             end = end
         )
 
-        assert(trip.duration["Days"] == durationDays)
-        assert(trip.duration["Hours"] == durationHours)
-        assert(trip.duration["Minutes"] == durationMinutes)
+        assert(trip.duration["days"] == durationDays)
+        assert(trip.duration["hours"] == durationHours)
+        assert(trip.duration["minutes"] == durationMinutes)
 
     }
 

@@ -76,17 +76,17 @@ class TripService(
             logger.info("Deleted Trip[id=$id]")
             true
         } else {
-            logger.warn("Tried to delete non-existent Trip[id=$id]")
+            logger.info("Tried to delete non-existent Trip[id=$id]")
             false
         }
     }
 
     fun getNextPage(
-        keysetId: Int?,
+        keysetId: Long?,
         keysetDate: LocalDateTime?,
         amount: Int
     ): List<Trip> {
-        // Query should either have both or none of id and date
+        // Query should either have both or none of ID and Date
         if ((keysetId == null && keysetDate != null) || (keysetId != null && keysetDate == null)) {
             throw IllegalArgumentException("Need either both or none of keysetId and keysetDate")
         }
@@ -96,12 +96,13 @@ class TripService(
         val query: TypedQuery<Trip>
         if (firstPage) {
             query = em.createQuery(
-                "SELECT t FROM Trip t ORDER BY t.start DESC, t.id DESC",
+                "SELECT t FROM Trip t WHERE t.start>?1 ORDER BY t.start ASC, t.id ASC",
                 Trip::class.java
             )
+            query.setParameter(1, LocalDateTime.now())
         } else {
             query = em.createQuery(
-                "select t from Trip t where t.start<?2 or (t.start=?2 and t.id<?1) order by t.start DESC, t.id DESC",
+                "SELECT t FROM Trip t WHERE t.start>?2 OR (t.start=?2 AND t.id>?1) ORDER BY t.start ASC, t.id ASC",
                 Trip::class.java
             )
             query.setParameter(1, keysetId)

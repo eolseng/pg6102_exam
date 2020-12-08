@@ -12,6 +12,7 @@ import no.id10022.pg6102.utils.rest.PageDto
 import no.id10022.pg6102.utils.rest.RestResponseFactory
 import no.id10022.pg6102.utils.rest.WrappedResponse
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -48,17 +49,21 @@ class RestApi(
     }
 
     @GetMapping
-    @ApiOperation("Retrieve all Trips")
+    @ApiOperation("Retrieve all upcoming Trips, sorted by Start")
     fun getAllTrips(
         @RequestParam("keysetId", required = false)
-        keysetId: Int?,
+        keysetId: Long?,
         @RequestParam("keysetDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         keysetDate: LocalDateTime?,
         @RequestParam("amount", required = false)
-        amount: Int?
+        amountParam: Int?
     ): ResponseEntity<WrappedResponse<PageDto<TripDto>>> {
         // Set amount if not supplied
-        val amount = amount ?: 10
+        val amount = amountParam ?: 10
+        // Verify amount is in range
+        if (amount !in 1..1000)
+            return RestResponseFactory.userError("Amount must be between in the range of 1 to 1000")
         // Create page dto
         val page = PageDto<TripDto>()
         // Fetch Trip and convert to DTOs
@@ -66,14 +71,14 @@ class RestApi(
         page.list = dtos
         // Check if not last page - will return a blank last page if match
         if (dtos.size == amount) {
-            page.next = "$TRIPS_PATH?keysetId=${dtos.last().id}&keysetTitle=${dtos.last().start}&amount=$amount"
+            page.next = "$TRIPS_PATH?keysetId=${dtos.last().id}&keysetDate=${dtos.last().start}&amount=$amount"
         }
         // Return the page
         return RestResponseFactory.payload(200, page)
     }
 
     @GetMapping("/{id}")
-    @ApiOperation("Retrieve a specific Trip by the ID")
+    @ApiOperation("Retrieve a specific Trip by its ID")
     fun getTripById(
         @ApiParam("The ID of the Trip to retrieve")
         @PathVariable("id") pathId: String
@@ -90,5 +95,16 @@ class RestApi(
         return RestResponseFactory.payload(200, dto)
     }
 
-
+    @DeleteMapping("/{id}")
+    @ApiOperation("Delete a specific Trip by its ID")
+    fun deleteTripById(
+        @ApiParam("The ID of the Trip to delete")
+        @PathVariable("id") id: Long
+    ): ResponseEntity<WrappedResponse<Void>> {
+        return if (!service.deleteTrip(id)) {
+            RestResponseFactory.userError(httpStatusCode = 404, message = "Trip with ID $id does not exist")
+        } else {
+            RestResponseFactory.noPayload(204)
+        }
+    }
 }

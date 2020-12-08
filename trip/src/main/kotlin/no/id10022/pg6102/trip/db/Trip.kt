@@ -44,16 +44,16 @@ class Trip(
 
 ) {
     @Transient
-    var duration: Map<String, Long> = mapOf()
+    var duration: Map<String, Int> = mapOf()
         private set
         get() {
-            val map = mutableMapOf<String, Long>()
+            val map = mutableMapOf<String, Int>()
             val days = start.until(end, ChronoUnit.DAYS)
             val hours = start.until(end, ChronoUnit.HOURS) - (days * 24)
             val minutes = start.until(end, ChronoUnit.MINUTES) - (days * 24 * 60) - (hours * 60)
-            map["Days"] = days
-            map["Hours"] = hours
-            map["Minutes"] = minutes
+            map["days"] = days.toInt()
+            map["hours"] = hours.toInt()
+            map["minutes"] = minutes.toInt()
             return map
         }
 }
