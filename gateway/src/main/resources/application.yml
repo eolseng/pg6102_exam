@@ -1,0 +1,25 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: ${GATEWAY_SERVICE_NAME:gateway}
+
+  cloud:
+    # Discovery Configuration
+    consul:
+      host: ${DISCOVERY_URL:localhost}
+      port: ${DISCOVERY_PORT:8500}
+      discovery:
+        instanceId: ${spring.application.name}:${random.value}
+
+    # Gateway Configuration
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: Auth
+          uri: lb://${AUTH_SERVICE_NAME}:8080
+          predicates:
+            - Path=/api/v1/auth/**

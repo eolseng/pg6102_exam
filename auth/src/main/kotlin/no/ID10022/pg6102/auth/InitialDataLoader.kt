@@ -19,8 +19,8 @@ class InitialDataLoader(
     /**
      * Creates a Admin user for the service
      * --------- [HIGHLY INSECURE] ---------
-     *  Only implemented for demo purposes!
      * MUST BE REMOVED IF USED IN PRODUCTION
+     *  Only implemented for demo purposes!
      * -------------------------------------
      */
     private fun createAdminUser() {

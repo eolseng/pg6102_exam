@@ -12,6 +12,7 @@
     <modules>
         <module>auth</module>
         <module>utils</module>
+        <module>gateway</module>
     </modules>
 
     <properties>
