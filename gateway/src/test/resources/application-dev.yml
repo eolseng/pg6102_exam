@@ -1,11 +1,8 @@
 server:
   port: 8080
 
-spring:
-  cloud:
-    gateway:
-      routes:
-        - id: Auth
-          uri: http://localhost:8081
-          predicates:
-            - Path=/api/v1/auth/**
+spring.cloud.gateway.routes:
+  - id: Auth
+    uri: http://localhost:8081
+    predicates:
+      - Path=/api/v1/auth/**
