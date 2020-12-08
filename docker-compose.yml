@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
 
-  # SUPPORTING SERVICES
+  # Supporting services
   discovery:
     image: consul:1.8
     environment:
@@ -20,6 +20,48 @@ services:
     networks:
       - service-network
 
+  # Gateway
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - 80:8080
+    networks:
+      - service-network
+    env_file:
+      - ./.env
+    depends_on:
+      - discovery
+
+  # Auth
+  auth:
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    networks:
+      - service-network
+      - auth-db-network
+    depends_on:
+      - auth-db
+      - redis
+      - rabbitmq
+    env_file:
+      - ./.env
+
+  auth-db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: ${AUTH_DB_NAME}
+      POSTGRES_USER: ${AUTH_DB_USERNAME}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+    volumes:
+      - /var/lib/postgresql/data
+    networks:
+      - auth-db-network
+
 networks:
   service-network:
+    driver: bridge
+  auth-db-network:
     driver: bridge

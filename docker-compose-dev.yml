@@ -1,7 +1,7 @@
 version: '3.8'
 
 # Docker Compose file used for local development
-# Starts all supporting services like databases, discovery service, RabbitMQ and Redis
+# Starts all supporting services Consul, RabbitMQ and Redis
 # Run with command "docker-compose -f docker-compose-dev.yml up"
 
 services:
