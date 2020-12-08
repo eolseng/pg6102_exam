@@ -1,4 +1,4 @@
-package no.ID10022.pg6102.utils.rest
+package no.id10022.pg6102.utils.rest
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

@@ -1,4 +1,4 @@
-package no.ID10022.pg6102.utils.rest
+package no.id10022.pg6102.utils.rest
 
 import org.springframework.http.ResponseEntity
 import java.net.URI
