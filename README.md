@@ -23,6 +23,7 @@ This requires the backing services (Redis, RabbitMQ and Consul) to be started as
 ### Exposed Ports:
 | Service:  | Port: |
 | ---       | ---   |
+| Gateway   | 8080  |
 | Auth      | 8081  |
 |           |       |
 | Consul    | 8500  |

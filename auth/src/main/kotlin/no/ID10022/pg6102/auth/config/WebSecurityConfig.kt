@@ -18,10 +18,43 @@ import javax.sql.DataSource
 @Configuration
 @EnableWebSecurity
 class WebSecurityConfig(
-        private val dataSource: DataSource
-//        private val userDetailsService: UserDetailsServiceImpl
-
+    private val dataSource: DataSource
 ) : WebSecurityConfigurerAdapter() {
+
+    override fun configure(http: HttpSecurity) {
+        http
+            // Exception Handling
+            .exceptionHandling().authenticationEntryPoint { _, res, _ ->
+                res.setHeader("WWW-Authenticate", "cookie")
+                res.sendError(401)
+            }
+            .and()
+
+            // Logout
+            .logout().logoutUrl("/api/v1/auth/logout")
+            .logoutSuccessHandler((HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT)))
+            .and()
+
+            // Authorization
+            .authorizeRequests()
+            // Actuator endpoints
+            .antMatchers("/actuator/**").permitAll()
+            // Swagger endpoints
+            .antMatchers("/swagger*/**", "/v3/api-docs").permitAll()
+            // Service endpoints
+            .antMatchers("/api/v1/auth/signup").permitAll()
+            .antMatchers("/api/v1/auth/login").permitAll()
+            .antMatchers("/api/v1/auth/logout").permitAll()
+            .antMatchers("/api/v1/auth/user").authenticated()
+            // Block anything else
+            .anyRequest().denyAll()
+            .and()
+
+            // Other
+            .csrf().disable()
+            .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+    }
 
     @Bean
     fun passwordEncoder(): PasswordEncoder {
@@ -41,55 +74,21 @@ class WebSecurityConfig(
 
     override fun configure(auth: AuthenticationManagerBuilder) {
         auth.jdbcAuthentication()
-                .dataSource(dataSource)
-                .usersByUsernameQuery("""
+            .dataSource(dataSource)
+            .usersByUsernameQuery(
+                """
                      SELECT username, password, enabled
                      FROM users
                      WHERE username=?
-                     """)
-                .authoritiesByUsernameQuery("""
+                     """
+            )
+            .authoritiesByUsernameQuery(
+                """
                      SELECT x.username, y.authority
                      FROM users x, authorities y
                      WHERE x.username=? and y.username=x.username
-                     """)
-                .passwordEncoder(passwordEncoder())
-//        auth
-//                .userDetailsService(userDetailsService)
-//                .passwordEncoder(passwordEncoder())
-    }
-
-    override fun configure(http: HttpSecurity) {
-        http
-                // Exception Handling
-                .exceptionHandling().authenticationEntryPoint { req, res, err ->
-                    res.setHeader("WWW-Authenticate", "cookie")
-                    res.sendError(401)
-                }
-                .and()
-
-                // Logout
-                .logout().logoutUrl("/api/v1/auth/logout")
-                .logoutSuccessHandler((HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT)))
-                .and()
-
-                // Authorization
-                .authorizeRequests()
-                // Actuator endpoints
-                .antMatchers("/actuator/**").permitAll()
-                // Swagger endpoints
-                .antMatchers("/swagger*/**", "/v3/api-docs").permitAll()
-                // Service endpoints
-                .antMatchers("/api/v1/auth/signup").permitAll()
-                .antMatchers("/api/v1/auth/login").permitAll()
-                .antMatchers("/api/v1/auth/logout").permitAll()
-                .antMatchers("/api/v1/auth/user").authenticated()
-                // Block anything else
-                .anyRequest().denyAll()
-                .and()
-
-                // Other
-                .csrf().disable()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                     """
+            )
+            .passwordEncoder(passwordEncoder())
     }
 }
