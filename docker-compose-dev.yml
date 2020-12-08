@@ -1,0 +1,24 @@
+version: '3.8'
+
+# Docker Compose file used for local development
+# Starts all supporting services like databases, discovery service, RabbitMQ and Redis
+# Run with command "docker-compose -f docker-compose-dev.yml up"
+
+services:
+
+  discovery:
+    image: consul:1.8
+    ports:
+      - 8500:8500
+    environment:
+      - CONSUL_LOCAL_CONFIG={"log_level":"info"}
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+
+  rabbitmq:
+    image: rabbitmq:3
+    ports:
+      - 5672:5672

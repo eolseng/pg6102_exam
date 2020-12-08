@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+
+  # SUPPORTING SERVICES
+  discovery:
+    image: consul:1.8
+    environment:
+      - CONSUL_LOCAL_CONFIG={"log_level":"info"}
+    networks:
+      - service-network
+
+  redis:
+    image: redis:latest
+    networks:
+      - service-network
+
+  rabbitmq:
+    image: rabbitmq:3
+    networks:
+      - service-network
+
+networks:
+  service-network:
+    driver: bridge
