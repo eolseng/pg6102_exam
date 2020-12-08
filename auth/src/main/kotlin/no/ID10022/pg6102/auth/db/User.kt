@@ -8,23 +8,23 @@ import javax.validation.constraints.NotNull
 @Table(name = "USERS")
 class User(
 
-        @get:Id
-        @get:NotBlank
-        var username: String,
+    @get:Id
+    @get:NotBlank
+    var username: String,
 
-        @get:NotBlank
-        var password: String,
+    @get:NotBlank
+    var password: String,
 
-        @get:ElementCollection
-        @get:CollectionTable(
-                name = "authorities",
-                joinColumns = [JoinColumn(name = "username")]
-        )
-        @get:Column(name = "authority")
-        @get:NotNull
-        var roles: Set<String>? = setOf(),
+    @get:ElementCollection
+    @get:CollectionTable(
+        name = "authorities",
+        joinColumns = [JoinColumn(name = "username")]
+    )
+    @get:Column(name = "authority")
+    @get:NotNull
+    var roles: Set<String>? = setOf(),
 
-        @get:NotNull
-        var enabled: Boolean = true
+    @get:NotNull
+    var enabled: Boolean = true
 
 )

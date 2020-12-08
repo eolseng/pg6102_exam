@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiOperation
 import no.id10022.pg6102.auth.db.UserService
 import no.id10022.pg6102.auth.dto.AuthDto
 import no.id10022.pg6102.utils.amqp.authExchangeName
-import no.id10022.pg6102.utils.amqp.newUserRK
+import no.id10022.pg6102.utils.amqp.createUserRK
 import no.id10022.pg6102.utils.rest.RestResponseFactory
 import no.id10022.pg6102.utils.rest.WrappedResponse
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -56,7 +56,7 @@ class RestApi(
         if (!registered) return RestResponseFactory.userError(message = "Username already exists")
 
         // Publish message that a new user is created
-        rabbitMQ.convertAndSend(authExchangeName, newUserRK, username)
+        rabbitMQ.convertAndSend(authExchangeName, createUserRK, username)
 
         // Attempt to retrieve the user from database
         val userDetails = try {

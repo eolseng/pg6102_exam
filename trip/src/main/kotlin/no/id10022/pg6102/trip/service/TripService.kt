@@ -2,6 +2,7 @@ package no.id10022.pg6102.trip.service
 
 import no.id10022.pg6102.trip.db.Trip
 import no.id10022.pg6102.trip.db.TripRepository
+import no.id10022.pg6102.trip.dto.TripDto
 import no.id10022.pg6102.utils.amqp.createTripRK
 import no.id10022.pg6102.utils.amqp.deleteTripRK
 import no.id10022.pg6102.utils.amqp.tripExchangeName
@@ -23,6 +24,18 @@ class TripService(
 ) {
 
     private val logger: Logger = LoggerFactory.getLogger(TripService::class.java)
+
+    fun createTrip(dto: TripDto): Trip {
+        return createTrip(
+            title = dto.title!!,
+            description = dto.description!!,
+            location = dto.location!!,
+            start = dto.start!!,
+            end = dto.end!!,
+            price = dto.price!!,
+            capacity = dto.capacity!!
+        )
+    }
 
     fun createTrip(
         title: String,
@@ -84,11 +97,13 @@ class TripService(
         if (firstPage) {
             query = em.createQuery(
                 "SELECT t FROM Trip t ORDER BY t.start DESC, t.id DESC",
-                Trip::class.java)
+                Trip::class.java
+            )
         } else {
             query = em.createQuery(
                 "select t from Trip t where t.start<?2 or (t.start=?2 and t.id<?1) order by t.start DESC, t.id DESC",
-                Trip::class.java)
+                Trip::class.java
+            )
             query.setParameter(1, keysetId)
             query.setParameter(2, keysetDate)
         }

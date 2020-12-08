@@ -60,7 +60,7 @@ services:
     networks:
       - auth-db-network
       -
-  # Trip
+      # Trip
   trip:
     build:
       context: ./trip

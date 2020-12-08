@@ -4,10 +4,10 @@ import javax.validation.constraints.NotBlank
 
 data class AuthDto(
 
-        @get:NotBlank
-        var username: String,
+    @get:NotBlank
+    var username: String,
 
-        @get:NotBlank
-        val password: String
+    @get:NotBlank
+    val password: String
 
 )

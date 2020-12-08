@@ -63,10 +63,10 @@ class SecurityTest {
         class Initializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
             override fun initialize(applicationContext: ConfigurableApplicationContext) {
                 TestPropertyValues.of(
-                        "spring.redis.host=${redis.containerIpAddress}",
-                        "spring.redis.port=${redis.getMappedPort(6379)}",
-                        "spring.rabbitmq.host=${rabbitMQ.containerIpAddress}",
-                        "spring.rabbitmq.port=${rabbitMQ.getMappedPort(5672)}"
+                    "spring.redis.host=${redis.containerIpAddress}",
+                    "spring.redis.port=${redis.getMappedPort(6379)}",
+                    "spring.rabbitmq.host=${rabbitMQ.containerIpAddress}",
+                    "spring.rabbitmq.port=${rabbitMQ.getMappedPort(5672)}"
                 ).applyTo(applicationContext.environment)
             }
         }
@@ -92,14 +92,14 @@ class SecurityTest {
     private fun registerUser(authDto: AuthDto): String {
         // Get 201 on successful registration. Should have Location and Set-Cookie header.
         return given().contentType(ContentType.JSON)
-                .body(authDto)
-                .post("/signup")
-                .then().assertThat()
-                .statusCode(201)
-                .header("Location", containsString("/api/v1/auth/user"))
-                .header("Set-Cookie", containsString("SESSION"))
-                .cookie("SESSION")
-                .extract().cookie("SESSION")
+            .body(authDto)
+            .post("/signup")
+            .then().assertThat()
+            .statusCode(201)
+            .header("Location", containsString("/api/v1/auth/user"))
+            .header("Set-Cookie", containsString("SESSION"))
+            .cookie("SESSION")
+            .extract().cookie("SESSION")
     }
 
     /**
@@ -107,9 +107,9 @@ class SecurityTest {
      */
     private fun checkAuthenticatedCookie(cookie: String, expectedCode: Int) {
         given().cookie("SESSION", cookie)
-                .get("/user")
-                .then().assertThat()
-                .statusCode(expectedCode)
+            .get("/user")
+            .then().assertThat()
+            .statusCode(expectedCode)
     }
 
     private fun getUniqueAuthDto(): AuthDto {
@@ -131,11 +131,11 @@ class SecurityTest {
 
         // Get 400 on failed registration. Body should contain message describing error.
         given().contentType(ContentType.JSON)
-                .body(dto)
-                .post("/signup")
-                .then().assertThat()
-                .statusCode(400)
-                .body("message", anything())
+            .body(dto)
+            .post("/signup")
+            .then().assertThat()
+            .statusCode(400)
+            .body("message", anything())
     }
 
     @Test
@@ -145,12 +145,12 @@ class SecurityTest {
 
         // Get 204 on successful login.
         val login = given().contentType(ContentType.JSON)
-                .body(dto)
-                .post("/login")
-                .then().assertThat()
-                .statusCode(204)
-                .cookie("SESSION")
-                .extract().cookie("SESSION")
+            .body(dto)
+            .post("/login")
+            .then().assertThat()
+            .statusCode(204)
+            .cookie("SESSION")
+            .extract().cookie("SESSION")
 
         // New login should create a new session cookie
         assertNotEquals(login, cookie)
@@ -168,12 +168,12 @@ class SecurityTest {
 
         // Get 400 on invalid username. Body should contain message with error description.
         val invalidLogin = given().contentType(ContentType.JSON)
-                .body(invalidPasswordUser)
-                .post("/login")
-                .then().assertThat()
-                .statusCode(400)
-                .body("message", anything())
-                .extract().cookie("SESSION")
+            .body(invalidPasswordUser)
+            .post("/login")
+            .then().assertThat()
+            .statusCode(400)
+            .body("message", anything())
+            .extract().cookie("SESSION")
         // Should not generate session cookie with bad username
         assertNull(invalidLogin)
 
@@ -189,13 +189,13 @@ class SecurityTest {
 
         // Get 401 on failed login. Body should contain message with error description.
         val invalidLogin = given().contentType(ContentType.JSON)
-                .body(invalidPasswordUser)
-                .post("/login")
-                .then().assertThat()
-                .statusCode(401)
-                .body("message", anything())
-                .cookie("SESSION")
-                .extract().cookie("SESSION")
+            .body(invalidPasswordUser)
+            .post("/login")
+            .then().assertThat()
+            .statusCode(401)
+            .body("message", anything())
+            .cookie("SESSION")
+            .extract().cookie("SESSION")
         // Should create new session cookie
         assertNotEquals(invalidLogin, cookie)
         // New cookie should not be valid
@@ -207,8 +207,8 @@ class SecurityTest {
     fun `test user endpoint - unauthorized`() {
         // Get 401 on unauthorized request
         given().get("/user")
-                .then().assertThat()
-                .statusCode(401)
+            .then().assertThat()
+            .statusCode(401)
     }
 
     @Test
@@ -219,11 +219,11 @@ class SecurityTest {
 
         // Get 200 on authorized request. Body should have username and roles
         given().cookie("SESSION", cookie)
-                .get("/user")
-                .then().assertThat()
-                .statusCode(200)
-                .body("data.username", equalTo(dto.username))
-                .body("data.roles", contains("ROLE_USER"))
+            .get("/user")
+            .then().assertThat()
+            .statusCode(200)
+            .body("data.username", equalTo(dto.username))
+            .body("data.roles", contains("ROLE_USER"))
     }
 
     @Test
@@ -234,9 +234,9 @@ class SecurityTest {
 
         // Get 204 on logout
         given().cookie("SESSION", cookie)
-                .post("/logout")
-                .then().assertThat()
-                .statusCode(204)
+            .post("/logout")
+            .then().assertThat()
+            .statusCode(204)
 
         // Session cookie should be invalid after logout
         checkAuthenticatedCookie(cookie, 401)

@@ -1,5 +1,6 @@
 package no.id10022.pg6102.trip.db
 
+import no.id10022.pg6102.trip.dto.TripDto
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import javax.persistence.*
@@ -41,19 +42,22 @@ class Trip(
     @get:Max(Int.MAX_VALUE.toLong(), message = "Capacity cannot be greater than ${Int.MAX_VALUE}")
     var capacity: Int = 0
 
-)
-{
+) {
     @Transient
-    var duration: Map<ChronoUnit, Long> = mapOf()
+    var duration: Map<String, Long> = mapOf()
         private set
         get() {
-            val map = mutableMapOf<ChronoUnit, Long>()
+            val map = mutableMapOf<String, Long>()
             val days = start.until(end, ChronoUnit.DAYS)
             val hours = start.until(end, ChronoUnit.HOURS) - (days * 24)
             val minutes = start.until(end, ChronoUnit.MINUTES) - (days * 24 * 60) - (hours * 60)
-            map[ChronoUnit.DAYS] = days
-            map[ChronoUnit.HOURS] = hours
-            map[ChronoUnit.MINUTES] = minutes
+            map["Days"] = days
+            map["Hours"] = hours
+            map["Minutes"] = minutes
             return map
         }
+}
+
+fun Trip.toDto(): TripDto {
+    return TripDto(id, title, description, location, start, end, duration, price, capacity)
 }

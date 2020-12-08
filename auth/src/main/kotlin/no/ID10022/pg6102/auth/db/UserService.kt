@@ -11,16 +11,16 @@ import javax.transaction.Transactional
 @Service
 @Transactional
 class UserService(
-        private val repository: UserRepository,
-        private val userDetailsServiceBean: UserDetailsService,
-        private val authManager: AuthenticationManager,
-        private val passwordEncoder: PasswordEncoder
+    private val repository: UserRepository,
+    private val userDetailsServiceBean: UserDetailsService,
+    private val authManager: AuthenticationManager,
+    private val passwordEncoder: PasswordEncoder
 ) {
 
     fun createUser(
-            username: String,
-            password: String,
-            roles: Set<String> = setOf()
+        username: String,
+        password: String,
+        roles: Set<String> = setOf()
     ): Boolean {
         try {
 
@@ -29,9 +29,9 @@ class UserService(
 
             if (repository.existsById(caseInsensitiveUsername)) return false
             val user = User(
-                    username = caseInsensitiveUsername,
-                    password = hash,
-                    roles = roles.map { "ROLE_$it" }.toSet()
+                username = caseInsensitiveUsername,
+                password = hash,
+                roles = roles.map { "ROLE_$it" }.toSet()
             )
             repository.save(user)
             return true
@@ -41,8 +41,8 @@ class UserService(
     }
 
     fun deleteUser(
-            username: String,
-            password: String
+        username: String,
+        password: String
     ): Boolean {
 
         // Attempt to retrieve the user from database

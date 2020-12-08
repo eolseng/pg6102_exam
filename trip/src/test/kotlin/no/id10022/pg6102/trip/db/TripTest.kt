@@ -2,7 +2,6 @@ package no.id10022.pg6102.trip.db
 
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 internal class TripTest {
 
@@ -21,9 +20,9 @@ internal class TripTest {
             end = end
         )
 
-        assert(trip.duration[ChronoUnit.DAYS] == durationDays)
-        assert(trip.duration[ChronoUnit.HOURS] == durationHours)
-        assert(trip.duration[ChronoUnit.MINUTES] == durationMinutes)
+        assert(trip.duration["Days"] == durationDays)
+        assert(trip.duration["Hours"] == durationHours)
+        assert(trip.duration["Minutes"] == durationMinutes)
 
     }
 
