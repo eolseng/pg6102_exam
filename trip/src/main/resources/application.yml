@@ -1,0 +1,40 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: ${TRIP_SERVICE_NAME:trip}
+  resources:
+    add-mappings: false
+  mvc:
+    throwExceptionIfNoHandlerFound: true
+
+  # Database
+  datasource:
+    url: "jdbc:postgresql://${TRIP_DB_URL:localhost:5432}/${TRIP_DB_NAME:postgres}"
+    username: ${TRIP_DB_USERNAME:postgres}
+    password: ${TRIP_DB_PASSWORD:""}
+    driver-class-name: "org.postgresql.Driver"
+  jpa:
+    database: "postgresql"
+    hibernate:
+      ddl-auto: update
+
+  # Session
+  session:
+    store-type: redis
+  redis:
+    host: ${REDIS_URL:localhost}
+    port: ${REDIS_PORT:6379}
+
+  # Message-Broker
+  rabbitmq:
+    host: ${RABBITMQ_URL:localhost}
+
+  # Discovery
+  cloud:
+    consul:
+      host: ${DISCOVERY_URL:localhost}
+      port: ${DISCOVERY_PORT:8500}
+      discovery:
+        instance-id: ${spring.application.name}:${random.value}

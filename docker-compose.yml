@@ -59,9 +59,38 @@ services:
       - /var/lib/postgresql/data
     networks:
       - auth-db-network
+      -
+  # Trip
+  trip:
+    build:
+      context: ./trip
+      dockerfile: Dockerfile
+    networks:
+      - service-network
+      - trip-db-network
+    depends_on:
+      - trip-db
+      - redis
+      - rabbitmq
+    env_file:
+      - ./.env
 
+  trip-db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: ${TRIP_DB_NAME}
+      POSTGRES_USER: ${TRIP_DB_USERNAME}
+      POSTGRES_PASSWORD: ${TRIP_DB_PASSWORD}
+    volumes:
+      - /var/lib/postgresql/data
+    networks:
+      - trip-db-network
+
+# Networks
 networks:
   service-network:
     driver: bridge
   auth-db-network:
+    driver: bridge
+  trip-db-network:
     driver: bridge
