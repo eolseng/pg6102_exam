@@ -26,7 +26,9 @@ This requires the backing services (Redis, RabbitMQ and Consul) to be started as
 | Gateway   | 8080  |
 | Auth      | 8081  |
 | Trip      | 8082  |
+| Booking   | 8083  |
 |           |       |
 | Consul    | 8500  |
 | Redis     | 6379  |
 | RabbitMQ  | 5672  |
+Only exposed when profile 'dev' is active.

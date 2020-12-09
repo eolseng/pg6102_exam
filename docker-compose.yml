@@ -60,7 +60,7 @@ services:
     networks:
       - auth-db-network
       -
-      # Trip
+  # Trip
   trip:
     build:
       context: ./trip
@@ -86,6 +86,32 @@ services:
     networks:
       - trip-db-network
 
+  # Booking
+  booking:
+    build:
+      context: ./booking
+      dockerfile: Dockerfile
+    networks:
+      - service-network
+      - booking-db-network
+    depends_on:
+      - booking-db
+      - redis
+      - rabbitmq
+    env_file:
+      - ./.env
+
+  booking-db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: ${BOOKING_DB_NAME}
+      POSTGRES_USER: ${BOOKING_DB_USERNAME}
+      POSTGRES_PASSWORD: ${BOOKING_DB_PASSWORD}
+    volumes:
+      - /var/lib/postgresql/data
+    networks:
+      - booking-db-network
+
 # Networks
 networks:
   service-network:
@@ -93,4 +119,6 @@ networks:
   auth-db-network:
     driver: bridge
   trip-db-network:
+    driver: bridge
+  booking-db-network:
     driver: bridge
