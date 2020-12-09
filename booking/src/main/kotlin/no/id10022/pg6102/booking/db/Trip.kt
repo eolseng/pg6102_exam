@@ -1,8 +1,6 @@
 package no.id10022.pg6102.booking.db
 
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.Table
+import javax.persistence.*
 import javax.validation.constraints.NotNull
 
 @Entity
@@ -11,6 +9,12 @@ class Trip(
 
     @get:Id
     @get:NotNull
-    var id: Long
+    var id: Long? = null,
+
+    @get:OneToMany(mappedBy = "trip", cascade = [(CascadeType.ALL)])
+    var bookings: MutableList<Booking> = mutableListOf(),
+
+    @get:NotNull
+    var cancelled: Boolean = false
 
 )

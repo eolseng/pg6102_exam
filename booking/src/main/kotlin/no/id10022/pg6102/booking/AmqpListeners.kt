@@ -34,9 +34,14 @@ class AmqpListeners(
         tripService.createTrip(id)
     }
 
+    /**
+     * When a Trip is deleted we mark it and all Bookings as Cancelled
+     * This way a Booking still has a reference to the cancelled Trips ID, even though the Trip itself is gone
+     */
     @RabbitListener(queues = [deleteTripBookingQueue])
     fun deleteTripOnMessage(id: Long) {
         logReceived("Delete Trip[id=$id]")
+        tripService.cancelTrip(id)
     }
 
 }

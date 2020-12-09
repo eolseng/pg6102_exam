@@ -39,6 +39,23 @@ class TripService(
     }
 
     /**
+     * Cancels the local copy of the Trip and all Bookings
+     * Usually gets called from an AMQP triggered event
+     */
+    fun cancelTrip(id: Long): Boolean {
+        // Get the Trip
+        val trip = getTripById(id) ?: return false
+        // Mark Trip as cancelled
+        trip.cancelled = true
+        // Mark all Bookings as cancelled
+        trip.bookings.forEach { it.cancelled = true }
+        // Persist, log and return
+        repo.save(trip)
+        logger.info("Cancelled Trip[id=$id]")
+        return true
+    }
+
+    /**
      * Attempts to retrieve a Trip from the local repository.
      * If the ID does not exist locally it checks with the Trip Service,
      * If it does exist in the Trip Service - create and return the Trip,

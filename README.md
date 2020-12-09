@@ -31,4 +31,5 @@ This requires the backing services (Redis, RabbitMQ and Consul) to be started as
 | Consul    | 8500  |
 | Redis     | 6379  |
 | RabbitMQ  | 5672  |
+
 Only exposed when profile 'dev' is active.
