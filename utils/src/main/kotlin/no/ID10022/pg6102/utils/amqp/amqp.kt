@@ -12,3 +12,8 @@ const val createUserRK = "create_user"
 const val tripExchangeName = "travel-agency.trip.dx"
 const val createTripRK = "create_trip"
 const val deleteTripRK = "delete_trip"
+
+// Booking service
+const val createUserBookingQueue = "create_user.booking.q"
+const val createTripBookingQueue = "create_trip.booking.q"
+const val deleteTripBookingQueue = "delete_trip.booking.q"
