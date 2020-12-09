@@ -71,9 +71,8 @@ class RestApi(
         // Create PageDto
         val page = PageDto(list = dtos)
         // Check if not last page - will return a blank last page if match
-        if (dtos.size == amount) {
+        if (dtos.size == amount)
             page.next = "$TRIPS_API_PATH?keysetId=${dtos.last().id}&keysetDate=${dtos.last().start}&amount=$amount"
-        }
         // Return the page
         return RestResponseFactory.payload(200, page)
     }
@@ -118,8 +117,8 @@ class RestApi(
         if (jsonNode.has("title")) {
             val node = jsonNode.get("title")
             when {
-                node.isNull -> return RestResponseFactory.userError("Trip Title cannot be null", 409)
-                node.asText().isEmpty() -> return RestResponseFactory.userError("Trip Title cannot be empty", 409)
+                node.isNull -> return RestResponseFactory.userError("Title cannot be null", 409)
+                node.asText().isEmpty() -> return RestResponseFactory.userError("Title cannot be empty", 409)
                 node.isTextual -> trip.title = node.asText()
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'title'")
             }
@@ -128,8 +127,8 @@ class RestApi(
         if (jsonNode.has("description")) {
             val node = jsonNode.get("description")
             when {
-                node.isNull -> return RestResponseFactory.userError("Trip Description cannot be null", 409)
-                node.asText().isEmpty() -> return RestResponseFactory.userError("Trip Description cannot be empty", 409)
+                node.isNull -> return RestResponseFactory.userError("Description cannot be null", 409)
+                node.asText().isEmpty() -> return RestResponseFactory.userError("Description cannot be empty", 409)
                 node.isTextual -> trip.description = node.asText()
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'description'")
             }
@@ -138,8 +137,8 @@ class RestApi(
         if (jsonNode.has("location")) {
             val node = jsonNode.get("location")
             when {
-                node.isNull -> return RestResponseFactory.userError("Trip Location cannot be null", 409)
-                node.asText().isEmpty() -> return RestResponseFactory.userError("Trip Location cannot be empty", 409)
+                node.isNull -> return RestResponseFactory.userError("Location cannot be null", 409)
+                node.asText().isEmpty() -> return RestResponseFactory.userError("Location cannot be empty", 409)
                 node.isTextual -> trip.location = node.asText()
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'location'")
             }
@@ -148,7 +147,7 @@ class RestApi(
         if (jsonNode.has("start")) {
             val node = jsonNode.get("start")
             when {
-                node.isNull -> return RestResponseFactory.userError("Trip Start cannot be null", 409)
+                node.isNull -> return RestResponseFactory.userError("Start cannot be null", 409)
                 node.isTextual -> {
                     val dateTime = try {
                         LocalDateTime.parse(node.asText())
@@ -164,7 +163,7 @@ class RestApi(
         if (jsonNode.has("end")) {
             val node = jsonNode.get("end")
             when {
-                node.isNull -> return RestResponseFactory.userError("Trip End cannot be null", 409)
+                node.isNull -> return RestResponseFactory.userError("End cannot be null", 409)
                 node.isTextual -> {
                     val dateTime = try {
                         LocalDateTime.parse(node.asText())
@@ -180,12 +179,12 @@ class RestApi(
         if (jsonNode.has("price")) {
             val node = jsonNode.get("price")
             when {
-                node.isNull -> return RestResponseFactory.userError("Trip Price cannot be null", 409)
+                node.isNull -> return RestResponseFactory.userError("Price cannot be null", 409)
                 node.isInt -> {
                     val price = node.asInt()
                     if (price !in 0..Int.MAX_VALUE) {
                         return RestResponseFactory.userError(
-                            "Trip Price must be in range of 1 to ${Int.MAX_VALUE}",
+                            "Price must be in range of 1 to ${Int.MAX_VALUE}",
                             409
                         )
                     } else {
@@ -199,12 +198,12 @@ class RestApi(
         if (jsonNode.has("capacity")) {
             val node = jsonNode.get("capacity")
             when {
-                node.isNull -> return RestResponseFactory.userError("Trip Capacity cannot be null", 409)
+                node.isNull -> return RestResponseFactory.userError("Capacity cannot be null", 409)
                 node.isInt -> {
                     val capacity = node.asInt()
                     if (capacity !in 0..Int.MAX_VALUE) {
                         return RestResponseFactory.userError(
-                            "Trip Capacity must be in range of 1 to ${Int.MAX_VALUE}",
+                            "Capacity must be in range of 1 to ${Int.MAX_VALUE}",
                             409
                         )
                     } else {
