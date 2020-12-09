@@ -59,7 +59,7 @@ services:
       - /var/lib/postgresql/data
     networks:
       - auth-db-network
-      -
+
   # Trip
   trip:
     build:

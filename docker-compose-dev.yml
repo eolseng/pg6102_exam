@@ -4,21 +4,23 @@ version: '3.8'
 # Starts all supporting services Consul, RabbitMQ and Redis
 # Run with command "docker-compose -f docker-compose-dev.yml up"
 
+# Services suffixed with '-dev' to separate them from the production containers
+
 services:
 
-  discovery:
+  discovery-dev:
     image: consul:1.8
     ports:
       - 8500:8500
     environment:
       - CONSUL_LOCAL_CONFIG={"log_level":"info"}
 
-  redis:
+  redis-dev:
     image: redis:latest
     ports:
       - 6379:6379
 
-  rabbitmq:
+  rabbitmq-dev:
     image: rabbitmq:3
     ports:
       - 5672:5672

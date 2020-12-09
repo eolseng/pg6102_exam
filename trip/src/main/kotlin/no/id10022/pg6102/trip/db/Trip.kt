@@ -27,9 +27,11 @@ class Trip(
     var location: String = "",
 
     @get:NotNull
+    @Column(name = "start_time")
     var start: LocalDateTime,
 
     @get:NotNull
+    @Column(name = "end_time") //'end' is a reserved keyword in Postgre
     var end: LocalDateTime,
 
     @get:NotNull

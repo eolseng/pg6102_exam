@@ -23,3 +23,11 @@ spring:
           uri: lb://${AUTH_SERVICE_NAME}:8080
           predicates:
             - Path=/api/v1/auth/**
+        - id: Trip
+          uri: lb://${TRIP_SERVICE_NAME}:8080
+          predicates:
+            - Path=/api/v1/trip/**
+        - id: Booking
+          uri: lb://${BOOKING_SERVICE_NAME}:8080
+          predicates:
+            - Path=/api/v1/booking/**

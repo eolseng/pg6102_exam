@@ -8,6 +8,8 @@ import no.id10022.pg6102.utils.amqp.authExchangeName
 import no.id10022.pg6102.utils.amqp.createUserRK
 import no.id10022.pg6102.utils.rest.RestResponseFactory
 import no.id10022.pg6102.utils.rest.WrappedResponse
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -30,6 +32,8 @@ class RestApi(
     private val userDetailsServiceBean: UserDetailsService,
     private val rabbitMQ: RabbitTemplate
 ) {
+
+    val logger : Logger = LoggerFactory.getLogger(RestApi::class.java)
 
     @ApiOperation("Retrieve name and roles of signed in user")
     @GetMapping("/user")
@@ -70,7 +74,8 @@ class RestApi(
         authManager.authenticate(token)
         if (token.isAuthenticated) SecurityContextHolder.getContext().authentication = token
 
-        // User successfully created - redirect to /user endpoint
+        // User successfully created - log and redirect to /user endpoint
+        logger.info("Created User[username=$username]")
         return RestResponseFactory.created(URI.create("/api/v1/auth/user"))
 
     }
@@ -98,6 +103,7 @@ class RestApi(
         authManager.authenticate(token)
         if (token.isAuthenticated) {
             SecurityContextHolder.getContext().authentication = token
+            logger.info("Logged in User[username=$username]")
             return RestResponseFactory.noPayload(204)
         }
 
