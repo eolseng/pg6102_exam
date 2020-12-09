@@ -2,15 +2,17 @@ package no.id10022.pg6102.booking.service
 
 import no.id10022.pg6102.booking.db.Booking
 import no.id10022.pg6102.booking.db.BookingRepository
-import no.id10022.pg6102.booking.db.Trip
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import javax.persistence.EntityManager
+import javax.persistence.TypedQuery
 
 @Service
 @Transactional
 class BookingService(
+    private val em: EntityManager,
     private val repo: BookingRepository,
     private val userService: UserService,
     private val tripService: TripService
@@ -49,4 +51,51 @@ class BookingService(
         logger.info("Created Booking[id=${booking.id}]")
         return booking
     }
+
+    /**
+     * Sets a Booking as 'cancelled'
+     * Does this directly in the database for better performance
+     */
+    fun cancelBooking(bookingId: Long): Boolean {
+        return (repo.cancelBookingById(bookingId) == 1)
+    }
+
+    /**
+     * Deletes a Booking entirely
+     */
+    fun deleteBooking(bookingId: Long) {
+        repo.deleteById(bookingId)
+    }
+
+    /**
+     * Gets a users Bookings sorted by ID ascending
+     * Uses Keyset/Seek pagination based on only ID
+     */
+    fun getNextPage(
+        username: String,
+        keysetId: Long?,
+        amount: Int
+    ): List<Booking> {
+        // Check if first page
+        val firstPage = keysetId == null
+        // Create query
+        val query: TypedQuery<Booking>
+        if (firstPage) {
+            query = em.createQuery(
+                "SELECT b FROM Booking b WHERE b.user.username = ?1 ORDER BY b.id ASC",
+                Booking::class.java
+            )
+            query.setParameter(1, username)
+        } else {
+            query = em.createQuery(
+                "SELECT b FROM Booking b WHERE b.user.username = ?1 AND b.id >?2 ORDER BY b.id ASC",
+                Booking::class.java
+            )
+            query.setParameter(1, username)
+            query.setParameter(2, keysetId)
+        }
+        query.maxResults = amount
+        return query.resultList
+    }
+
 }

@@ -2,10 +2,10 @@ package no.id10022.pg6102.trip.service
 
 import no.id10022.pg6102.trip.db.Trip
 import no.id10022.pg6102.trip.db.TripRepository
-import no.id10022.pg6102.trip.dto.TripDto
 import no.id10022.pg6102.utils.amqp.createTripRK
 import no.id10022.pg6102.utils.amqp.deleteTripRK
 import no.id10022.pg6102.utils.amqp.tripExchangeName
+import no.id10022.pg6102.utils.rest.dto.TripDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
