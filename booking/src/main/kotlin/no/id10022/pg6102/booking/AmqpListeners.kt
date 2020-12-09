@@ -1,5 +1,6 @@
 package no.id10022.pg6102.booking
 
+import no.id10022.pg6102.booking.service.UserService
 import no.id10022.pg6102.utils.amqp.createTripBookingQueue
 import no.id10022.pg6102.utils.amqp.createUserBookingQueue
 import no.id10022.pg6102.utils.amqp.deleteTripBookingQueue
@@ -9,23 +10,26 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class AmqpListeners {
+class AmqpListeners(
+    private val userService: UserService
+) {
 
     val logger: Logger = LoggerFactory.getLogger(AmqpListeners::class.java)
 
     @RabbitListener(queues = [createUserBookingQueue])
-    fun createUserOnMessage(id: String) {
-        logger.info("Created User[id=$id]")
+    fun createUserOnMessage(username: String) {
+        logger.info("Msg: Create User[username=$username]")
+        userService.createUser(username)
     }
 
     @RabbitListener(queues = [createTripBookingQueue])
     fun createTripOnMessage(id: Long) {
-        logger.info("Created Trip[id=$id]")
+        logger.info("Msg: Creat Trip[id=$id]")
     }
 
     @RabbitListener(queues = [deleteTripBookingQueue])
     fun deleteTripOnMessage(id: Long) {
-        logger.info("Deleted Trip[id=$id]")
+        logger.info("Msg: Delete Trip[id=$id]")
     }
 
 }
