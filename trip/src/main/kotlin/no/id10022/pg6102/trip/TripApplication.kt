@@ -4,6 +4,8 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient
 
+const val API_BASE_PATH = "/api/v1/trip"
+
 @EnableDiscoveryClient
 @SpringBootApplication
 class TripApplication

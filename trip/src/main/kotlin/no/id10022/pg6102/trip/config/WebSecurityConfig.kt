@@ -1,6 +1,6 @@
 package no.id10022.pg6102.trip.config
 
-import no.id10022.pg6102.trip.TRIPS_PATH
+import no.id10022.pg6102.trip.TRIPS_API_PATH
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -26,9 +26,9 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
             // API Documentation endpoint
             .antMatchers("/swagger*/**", "/v3/api-docs").permitAll()
             // Service endpoints
-            .antMatchers(HttpMethod.GET, "$TRIPS_PATH*/**").permitAll()
-            .antMatchers(HttpMethod.HEAD, "$TRIPS_PATH*/**").permitAll()
-            .antMatchers("$TRIPS_PATH*/**").hasRole("ADMIN")
+            .antMatchers(HttpMethod.GET, "$TRIPS_API_PATH*/**").permitAll()
+            .antMatchers(HttpMethod.HEAD, "$TRIPS_API_PATH*/**").permitAll()
+            .antMatchers("$TRIPS_API_PATH*/**").hasRole("ADMIN")
             // Block anything else
             .anyRequest().denyAll()
             .and()

@@ -40,7 +40,7 @@ class RestApiTest {
         // Setup RestAssured
         RestAssured.baseURI = "http://localhost"
         RestAssured.port = port
-        RestAssured.basePath = TRIPS_PATH
+        RestAssured.basePath = TRIPS_API_PATH
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
         // Clear repository
         repo.deleteAll()

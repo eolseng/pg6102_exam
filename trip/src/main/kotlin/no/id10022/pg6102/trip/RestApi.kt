@@ -21,13 +21,13 @@ import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.time.LocalDateTime
 
-const val API_BASE_PATH = "/api/v1/trip"
-const val TRIPS_PATH = "$API_BASE_PATH/trips"
 
-@Api(value = TRIPS_PATH, description = "Endpoint for managing Trips")
+const val TRIPS_API_PATH = "$API_BASE_PATH/trips"
+
+@Api(value = TRIPS_API_PATH, description = "Endpoint for managing Trips")
 @RestController
 @RequestMapping(
-    path = [TRIPS_PATH],
+    path = [TRIPS_API_PATH],
     produces = [(MediaType.APPLICATION_JSON_VALUE)]
 )
 class RestApi(
@@ -47,7 +47,7 @@ class RestApi(
         // Persist the Trip
         val trip = service.createTrip(dto)
         // Return path to the created Trip
-        return RestResponseFactory.created(URI.create("$TRIPS_PATH/${trip.id}"))
+        return RestResponseFactory.created(URI.create("$TRIPS_API_PATH/${trip.id}"))
     }
 
     @GetMapping
@@ -72,7 +72,7 @@ class RestApi(
         val page = PageDto(list = dtos)
         // Check if not last page - will return a blank last page if match
         if (dtos.size == amount) {
-            page.next = "$TRIPS_PATH?keysetId=${dtos.last().id}&keysetDate=${dtos.last().start}&amount=$amount"
+            page.next = "$TRIPS_API_PATH?keysetId=${dtos.last().id}&keysetDate=${dtos.last().start}&amount=$amount"
         }
         // Return the page
         return RestResponseFactory.payload(200, page)
@@ -184,7 +184,10 @@ class RestApi(
                 node.isInt -> {
                     val price = node.asInt()
                     if (price !in 0..Int.MAX_VALUE) {
-                        return RestResponseFactory.userError("Trip Price must be in range of 1 to ${Int.MAX_VALUE}", 409)
+                        return RestResponseFactory.userError(
+                            "Trip Price must be in range of 1 to ${Int.MAX_VALUE}",
+                            409
+                        )
                     } else {
                         trip.price = price
                     }
@@ -200,7 +203,10 @@ class RestApi(
                 node.isInt -> {
                     val capacity = node.asInt()
                     if (capacity !in 0..Int.MAX_VALUE) {
-                        return RestResponseFactory.userError("Trip Capacity must be in range of 1 to ${Int.MAX_VALUE}", 409)
+                        return RestResponseFactory.userError(
+                            "Trip Capacity must be in range of 1 to ${Int.MAX_VALUE}",
+                            409
+                        )
                     } else {
                         trip.capacity = capacity
                     }
