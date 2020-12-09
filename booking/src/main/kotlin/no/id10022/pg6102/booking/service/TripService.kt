@@ -86,6 +86,7 @@ class TripService(
         // Persist, log and return
         repo.save(trip)
         logger.info("Cancelled Trip[id=$id]")
+        trip.bookings.forEach { logger.info("Cancelled Booking[id=${it.id}]. Reason: Cancelled Trip[id=$id]") }
         return true
     }
 

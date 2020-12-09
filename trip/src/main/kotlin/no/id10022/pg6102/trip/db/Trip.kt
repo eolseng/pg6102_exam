@@ -1,6 +1,6 @@
 package no.id10022.pg6102.trip.db
 
-import no.id10022.pg6102.trip.dto.TripDto
+import no.id10022.pg6102.utils.rest.dto.TripDto
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import javax.persistence.*

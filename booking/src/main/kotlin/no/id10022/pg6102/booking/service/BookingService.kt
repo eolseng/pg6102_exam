@@ -57,14 +57,28 @@ class BookingService(
      * Does this directly in the database for better performance
      */
     fun cancelBooking(bookingId: Long): Boolean {
-        return (repo.cancelBookingById(bookingId) == 1)
+        return if (repo.cancelBookingById(bookingId) == 1) {
+            logger.info("Cancelled Booking[id=$bookingId]")
+            true
+        } else {
+            if (!repo.existsById(bookingId))
+                logger.info("Failed to cancel Booking[id=$bookingId]. Reason: Does not exist")
+            else
+                logger.info("Failed to cancel Booking[id=$bookingId]. Reason: Unknown")
+            false
+        }
     }
 
     /**
      * Deletes a Booking entirely
      */
     fun deleteBooking(bookingId: Long) {
-        repo.deleteById(bookingId)
+        if (repo.existsById(bookingId)) {
+            logger.info("Deleted Booking[id=$bookingId]")
+            repo.deleteById(bookingId)
+        } else {
+            logger.info("Failed to delete Booking[id=$bookingId]. Reason: Does not exist")
+        }
     }
 
     /**

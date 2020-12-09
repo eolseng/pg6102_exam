@@ -5,7 +5,7 @@ import io.restassured.RestAssured
 import io.restassured.http.ContentType
 import io.restassured.response.Response
 import no.id10022.pg6102.trip.db.TripRepository
-import no.id10022.pg6102.trip.dto.TripDto
+import no.id10022.pg6102.utils.rest.dto.TripDto
 import org.hamcrest.CoreMatchers
 import org.junit.Assert.*
 import org.junit.jupiter.api.AfterEach
