@@ -1,5 +1,6 @@
 package no.id10022.pg6102.trip
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.restassured.RestAssured
 import io.restassured.http.ContentType
 import io.restassured.response.Response
@@ -100,7 +101,7 @@ class RestApiTest {
 
         RestAssured.given()
             .accept(ContentType.JSON)
-            .get("/s$id")
+            .get("/$id")
             .then().assertThat()
             .statusCode(200)
             .body("data.id", CoreMatchers.equalTo(id.toInt()))
@@ -181,6 +182,165 @@ class RestApiTest {
         }
         // Check that all Trips have been retrieved
         assertEquals(total, uniqueIds.size)
+    }
+
+    @Test
+    fun `patch trip with valid updates`() {
+
+        // Register and get Trip
+        val id = registerTrip()
+        val originalTrip = repo.findById(id).get()
+
+        // Declare data for patch
+        val newTitle = "new_title"
+        val newDescription = "new_description"
+        val newLocation = "new_location"
+        val newStart = LocalDateTime.now().plusYears(1)
+        val newEnd = newStart.plusDays(1)
+        val newPrice = 800
+        val newCapacity = 40
+
+        // Create patch JsonDto
+        val patchDto = ObjectMapper().createObjectNode()
+            .put("title", newTitle)
+            .put("description", newDescription)
+            .put("location", newLocation)
+            .put("start", newStart.toString())
+            .put("end", newEnd.toString())
+            .put("price", newPrice)
+            .put("capacity", newCapacity)
+
+        // Apply patch
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .contentType(ContentType.JSON)
+            .body(patchDto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(204)
+
+        // Get the patched Trip
+        val patchedTrip = repo.findById(id).get()
+
+        // Verify update
+        assertTrue(patchedTrip.title != originalTrip.title)
+        assertTrue(patchedTrip.title == newTitle)
+
+        assertTrue(patchedTrip.description != originalTrip.description)
+        assertTrue(patchedTrip.description == newDescription)
+
+        assertTrue(patchedTrip.location != originalTrip.location)
+        assertTrue(patchedTrip.location == newLocation)
+
+        assertTrue(patchedTrip.start != originalTrip.start)
+        assertTrue(patchedTrip.start == newStart)
+
+        assertTrue(patchedTrip.end != originalTrip.end)
+        assertTrue(patchedTrip.end == newEnd)
+
+        assertTrue(patchedTrip.price == newPrice)
+
+        assertTrue(patchedTrip.capacity != originalTrip.capacity)
+        assertTrue(patchedTrip.capacity == newCapacity)
+
+    }
+
+    @Test
+    fun `patch with invalid updates`() {
+        // Register and get Trip
+        val id = registerTrip()
+        val om = ObjectMapper()
+
+        // Null string
+        val nullString = om.createObjectNode()
+            .putNull("title")
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .contentType(ContentType.JSON)
+            .body(nullString)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(409)
+
+        // Empty string
+        val emptyString = om.createObjectNode()
+            .put("description", "")
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .contentType(ContentType.JSON)
+            .body(emptyString)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(409)
+
+        // String as date
+        val invalidDate = om.createObjectNode()
+            .put("start", "INVALID")
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .contentType(ContentType.JSON)
+            .body(invalidDate)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(400)
+
+        // String as int
+        val stringAsInt = om.createObjectNode()
+            .put("price", "STRING")
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .contentType(ContentType.JSON)
+            .body(stringAsInt)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(400)
+
+    }
+
+    @Test
+    fun `patch security`() {
+
+        val id = registerTrip()
+        val patchDto = ObjectMapper().createObjectNode()
+            .put("title", "new title")
+
+        // Not authenticated
+        RestAssured.given()
+            .contentType(ContentType.JSON)
+            .body(patchDto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(401)
+
+        // As Aser
+        RestAssured.given()
+            .auth().basic("user", "user")
+            .contentType(ContentType.JSON)
+            .body(patchDto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(403)
+
+        // As Admin
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .contentType(ContentType.JSON)
+            .body(patchDto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(204)
+
+        // Invalid ID
+        val invalidId = id + 1337
+        assertFalse(repo.existsById(invalidId))
+        RestAssured.given()
+            .auth().basic("admin", "admin")
+            .contentType(ContentType.JSON)
+            .body(patchDto)
+            .patch("/$invalidId")
+            .then().assertThat()
+            .statusCode(404)
+
     }
 
     @Test

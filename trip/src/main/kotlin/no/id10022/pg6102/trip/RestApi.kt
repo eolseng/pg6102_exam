@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.time.LocalDateTime
 
-const val API_BASE_PATH = "/api/v1/blueprint"
+const val API_BASE_PATH = "/api/v1/trip"
 const val TRIPS_PATH = "$API_BASE_PATH/trips"
 
 @Api(value = TRIPS_PATH, description = "Endpoint for managing Trips")
@@ -118,23 +118,19 @@ class RestApi(
         if (jsonNode.has("title")) {
             val node = jsonNode.get("title")
             when {
-                node.isNull -> {
-                    return RestResponseFactory.userError("Trip Title cannot be empty", 409)
-                }
-                node.isTextual -> {
-                    trip.title = node.asText()
-                }
-                else -> {
-                    return RestResponseFactory.userError("Invalid JSON on field 'title'")
-                }
+                node.isNull -> return RestResponseFactory.userError("Trip Title cannot be null", 409)
+                node.asText().isEmpty() -> return RestResponseFactory.userError("Trip Title cannot be empty", 409)
+                node.isTextual -> trip.title = node.asText()
+                else -> return RestResponseFactory.userError("Invalid JSON on field 'title'")
             }
         }
         // Description
         if (jsonNode.has("description")) {
             val node = jsonNode.get("description")
             when {
-                node.isTextual -> trip.description = node.asText()
                 node.isNull -> return RestResponseFactory.userError("Trip Description cannot be null", 409)
+                node.asText().isEmpty() -> return RestResponseFactory.userError("Trip Description cannot be empty", 409)
+                node.isTextual -> trip.description = node.asText()
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'description'")
             }
         }
@@ -142,8 +138,9 @@ class RestApi(
         if (jsonNode.has("location")) {
             val node = jsonNode.get("location")
             when {
-                node.isTextual -> trip.location = node.asText()
                 node.isNull -> return RestResponseFactory.userError("Trip Location cannot be null", 409)
+                node.asText().isEmpty() -> return RestResponseFactory.userError("Trip Location cannot be empty", 409)
+                node.isTextual -> trip.location = node.asText()
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'location'")
             }
         }
@@ -151,6 +148,7 @@ class RestApi(
         if (jsonNode.has("start")) {
             val node = jsonNode.get("start")
             when {
+                node.isNull -> return RestResponseFactory.userError("Trip Start cannot be null", 409)
                 node.isTextual -> {
                     val dateTime = try {
                         LocalDateTime.parse(node.asText())
@@ -159,7 +157,6 @@ class RestApi(
                     }
                     trip.start = dateTime
                 }
-                node.isNull -> return RestResponseFactory.userError("Trip Start cannot be null", 409)
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'start'")
             }
         }
@@ -167,6 +164,7 @@ class RestApi(
         if (jsonNode.has("end")) {
             val node = jsonNode.get("end")
             when {
+                node.isNull -> return RestResponseFactory.userError("Trip End cannot be null", 409)
                 node.isTextual -> {
                     val dateTime = try {
                         LocalDateTime.parse(node.asText())
@@ -175,7 +173,6 @@ class RestApi(
                     }
                     trip.end = dateTime
                 }
-                node.isNull -> return RestResponseFactory.userError("Trip End cannot be null", 409)
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'end'")
             }
         }
@@ -183,6 +180,7 @@ class RestApi(
         if (jsonNode.has("price")) {
             val node = jsonNode.get("price")
             when {
+                node.isNull -> return RestResponseFactory.userError("Trip Price cannot be null", 409)
                 node.isInt -> {
                     val price = node.asInt()
                     if (price !in 0..Int.MAX_VALUE) {
@@ -191,7 +189,6 @@ class RestApi(
                         trip.price = price
                     }
                 }
-                node.isNull -> return RestResponseFactory.userError("Trip Price cannot be null", 409)
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'price'")
             }
         }
@@ -199,6 +196,7 @@ class RestApi(
         if (jsonNode.has("capacity")) {
             val node = jsonNode.get("capacity")
             when {
+                node.isNull -> return RestResponseFactory.userError("Trip Capacity cannot be null", 409)
                 node.isInt -> {
                     val capacity = node.asInt()
                     if (capacity !in 0..Int.MAX_VALUE) {
@@ -207,7 +205,6 @@ class RestApi(
                         trip.capacity = capacity
                     }
                 }
-                node.isNull -> return RestResponseFactory.userError("Trip Capacity cannot be null", 409)
                 else -> return RestResponseFactory.userError("Invalid JSON on field 'capacity'")
             }
         }
