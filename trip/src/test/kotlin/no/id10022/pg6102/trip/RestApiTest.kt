@@ -100,7 +100,7 @@ class RestApiTest {
 
         RestAssured.given()
             .accept(ContentType.JSON)
-            .get("/$id")
+            .get("/s$id")
             .then().assertThat()
             .statusCode(200)
             .body("data.id", CoreMatchers.equalTo(id.toInt()))

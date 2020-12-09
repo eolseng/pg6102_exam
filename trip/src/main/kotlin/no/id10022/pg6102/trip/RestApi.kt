@@ -1,5 +1,7 @@
 package no.id10022.pg6102.trip
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -64,11 +66,10 @@ class RestApi(
         // Verify amount is in range
         if (amount !in 1..1000)
             return RestResponseFactory.userError("Amount must be between in the range of 1 to 1000")
-        // Create page dto
-        val page = PageDto<TripDto>()
         // Fetch Trip and convert to DTOs
         val dtos = service.getNextPage(keysetId, keysetDate, amount).map { it.toDto() }
-        page.list = dtos
+        // Create PageDto
+        val page = PageDto(list = dtos)
         // Check if not last page - will return a blank last page if match
         if (dtos.size == amount) {
             page.next = "$TRIPS_PATH?keysetId=${dtos.last().id}&keysetDate=${dtos.last().start}&amount=$amount"
@@ -81,11 +82,8 @@ class RestApi(
     @ApiOperation("Retrieve a specific Trip by its ID")
     fun getTripById(
         @ApiParam("The ID of the Trip to retrieve")
-        @PathVariable("id") pathId: String
+        @PathVariable("id") id: Long
     ): ResponseEntity<WrappedResponse<Any>> {
-        // Convert pathId to Int value
-        val id = pathId.toLongOrNull()
-            ?: return RestResponseFactory.userError("ID must be a number")
         // Retrieve Trip from repository
         val trip = repo.findByIdOrNull(id)
             ?: return RestResponseFactory.notFound("Could not find Trip with ID $id")
@@ -93,6 +91,130 @@ class RestApi(
         val dto = trip.toDto()
         // Send the DTO
         return RestResponseFactory.payload(200, dto)
+    }
+
+    @PatchMapping("/{id}")
+    @ApiOperation("Update a specific Trip by its ID")
+    fun patchTripById(
+        @ApiParam("The ID of the Trip to update")
+        @PathVariable("id") id: Long,
+        @ApiParam("The partial patch to be applied")
+        @RequestBody jsonPatch: String
+    ): ResponseEntity<WrappedResponse<Void>> {
+        // Get Trip to patch
+        val trip = repo.findByIdOrNull(id)
+            ?: return RestResponseFactory.userError("Trip with ID $id does not exist", 404)
+        // Convert String to JsonNode
+        val jsonNode = try {
+            ObjectMapper().readValue(jsonPatch, JsonNode::class.java)
+        } catch (e: Exception) {
+            return RestResponseFactory.userError("Invalid JSON")
+        }
+        // Check if Patch node contains ID
+        if (jsonNode.has("id"))
+            return RestResponseFactory.userError("Cannot alter ID of existing Trip", 409)
+        // Update the Trip - does not persist changes until all checks have passed
+        // Title
+        if (jsonNode.has("title")) {
+            val node = jsonNode.get("title")
+            when {
+                node.isNull -> {
+                    return RestResponseFactory.userError("Trip Title cannot be empty", 409)
+                }
+                node.isTextual -> {
+                    trip.title = node.asText()
+                }
+                else -> {
+                    return RestResponseFactory.userError("Invalid JSON on field 'title'")
+                }
+            }
+        }
+        // Description
+        if (jsonNode.has("description")) {
+            val node = jsonNode.get("description")
+            when {
+                node.isTextual -> trip.description = node.asText()
+                node.isNull -> return RestResponseFactory.userError("Trip Description cannot be null", 409)
+                else -> return RestResponseFactory.userError("Invalid JSON on field 'description'")
+            }
+        }
+        // Location
+        if (jsonNode.has("location")) {
+            val node = jsonNode.get("location")
+            when {
+                node.isTextual -> trip.location = node.asText()
+                node.isNull -> return RestResponseFactory.userError("Trip Location cannot be null", 409)
+                else -> return RestResponseFactory.userError("Invalid JSON on field 'location'")
+            }
+        }
+        // Start
+        if (jsonNode.has("start")) {
+            val node = jsonNode.get("start")
+            when {
+                node.isTextual -> {
+                    val dateTime = try {
+                        LocalDateTime.parse(node.asText())
+                    } catch (e: Exception) {
+                        return RestResponseFactory.userError("Invalid JSON on field 'start'")
+                    }
+                    trip.start = dateTime
+                }
+                node.isNull -> return RestResponseFactory.userError("Trip Start cannot be null", 409)
+                else -> return RestResponseFactory.userError("Invalid JSON on field 'start'")
+            }
+        }
+        // End
+        if (jsonNode.has("end")) {
+            val node = jsonNode.get("end")
+            when {
+                node.isTextual -> {
+                    val dateTime = try {
+                        LocalDateTime.parse(node.asText())
+                    } catch (e: Exception) {
+                        return RestResponseFactory.userError("Invalid JSON on field 'end'")
+                    }
+                    trip.end = dateTime
+                }
+                node.isNull -> return RestResponseFactory.userError("Trip End cannot be null", 409)
+                else -> return RestResponseFactory.userError("Invalid JSON on field 'end'")
+            }
+        }
+        // Price
+        if (jsonNode.has("price")) {
+            val node = jsonNode.get("price")
+            when {
+                node.isInt -> {
+                    val price = node.asInt()
+                    if (price !in 0..Int.MAX_VALUE) {
+                        return RestResponseFactory.userError("Trip Price must be in range of 1 to ${Int.MAX_VALUE}", 409)
+                    } else {
+                        trip.price = price
+                    }
+                }
+                node.isNull -> return RestResponseFactory.userError("Trip Price cannot be null", 409)
+                else -> return RestResponseFactory.userError("Invalid JSON on field 'price'")
+            }
+        }
+        // Capacity
+        if (jsonNode.has("capacity")) {
+            val node = jsonNode.get("capacity")
+            when {
+                node.isInt -> {
+                    val capacity = node.asInt()
+                    if (capacity !in 0..Int.MAX_VALUE) {
+                        return RestResponseFactory.userError("Trip Capacity must be in range of 1 to ${Int.MAX_VALUE}", 409)
+                    } else {
+                        trip.capacity = capacity
+                    }
+                }
+                node.isNull -> return RestResponseFactory.userError("Trip Capacity cannot be null", 409)
+                else -> return RestResponseFactory.userError("Invalid JSON on field 'capacity'")
+            }
+        }
+
+        // Checked all fields - persist and return
+        repo.save(trip)
+        return ResponseEntity.status(204).build()
     }
 
     @DeleteMapping("/{id}")
