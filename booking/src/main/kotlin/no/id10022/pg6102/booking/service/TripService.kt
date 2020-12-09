@@ -2,10 +2,13 @@ package no.id10022.pg6102.booking.service
 
 import no.id10022.pg6102.booking.db.Trip
 import no.id10022.pg6102.booking.db.TripRepository
+import no.id10022.pg6102.utils.rest.WrappedResponse
+import no.id10022.pg6102.utils.rest.dto.TripDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
@@ -29,6 +32,37 @@ class TripService(
     val tripPath = "/api/v1/trip"
 
     /**
+     * Fetches a Trip DTO from the Trip Service
+     */
+    fun fetchTrip(id: Long): TripDto? {
+        val uri = URI("http://$tripUrl$tripPath/trips/$id")
+        return cb.run(
+            {
+                // Fetch a Trip from the Trip Service and retrieve the TripDto
+                client.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    null,
+                    object : ParameterizedTypeReference<WrappedResponse<TripDto>>() {})
+                    .body
+                    ?.data
+            },
+            { err ->
+                // Failed to fetch Trip from Trip Service
+                logger.error("Failed to retrieve data from Trip Service: ${err.message}")
+                null
+            }
+        )
+    }
+
+    /**
+     * Fetches a Trip from the Trip Service to get the Trip Capacity
+     */
+    fun getTripCapacity(id: Long): Int? {
+        return fetchTrip(id)?.capacity
+    }
+
+    /**
      * Creates a local copy of a Trip.
      * Usually gets called from an AMQP triggered event.
      */
@@ -44,7 +78,7 @@ class TripService(
      */
     fun cancelTrip(id: Long): Boolean {
         // Get the Trip
-        val trip = getTripById(id) ?: return false
+        val trip = getTripById(id, true) ?: return false
         // Mark Trip as cancelled
         trip.cancelled = true
         // Mark all Bookings as cancelled
@@ -61,17 +95,18 @@ class TripService(
      * If it does exist in the Trip Service - create and return the Trip,
      * Else return null.
      */
-    fun getTripById(id: Long): Trip? {
-        // Check if the Trip exists in local database
-        return repo.findByIdOrNull(id)
-        // Not in local database - check with Trip Service
-            ?: if (verifyTrip(id)) {
-                // Trip exists - create and return local copy
-                createTrip((id))
-            } else {
-                // Trip does not exist - return null
-                null
-            }
+    fun getTripById(id: Long, locked: Boolean): Trip? {
+        // Check if Trip exists in local database
+        if (!repo.existsById(id)) {
+            // Create new Trip if Trip Service confirms Trip with given ID
+            if (verifyTrip(id))
+                createTrip(id)
+            // Trip does not exist
+            else
+                return null
+        }
+        // Return the Trip
+        return if (locked) repo.findWithLock(id) else repo.findByIdOrNull(id)
     }
 
     /**

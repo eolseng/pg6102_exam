@@ -7,12 +7,12 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import no.id10022.pg6102.trip.db.TripRepository
 import no.id10022.pg6102.trip.db.toDto
-import no.id10022.pg6102.trip.dto.TripDto
-import no.id10022.pg6102.trip.dto.isValidForRegistration
 import no.id10022.pg6102.trip.service.TripService
-import no.id10022.pg6102.utils.rest.PageDto
 import no.id10022.pg6102.utils.rest.RestResponseFactory
 import no.id10022.pg6102.utils.rest.WrappedResponse
+import no.id10022.pg6102.utils.rest.dto.PageDto
+import no.id10022.pg6102.utils.rest.dto.TripDto
+import no.id10022.pg6102.utils.rest.dto.isValidForRegistration
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.MediaType

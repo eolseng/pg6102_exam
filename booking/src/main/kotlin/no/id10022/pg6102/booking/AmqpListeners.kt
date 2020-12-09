@@ -18,7 +18,10 @@ class AmqpListeners(
 
     val logger: Logger = LoggerFactory.getLogger(AmqpListeners::class.java)
 
-    fun logReceived(msg: String) {
+    /**
+     * Convenience function to prefix logs
+     */
+    private fun logReceived(msg: String) {
         logger.info("AMQP Received: $msg")
     }
 
@@ -34,9 +37,10 @@ class AmqpListeners(
         tripService.createTrip(id)
     }
 
-    /**
-     * When a Trip is deleted we mark it and all Bookings as Cancelled
+    /*
+     * When a Trip is deleted in the Trip Service we mark the local copy of it and all connected Bookings as 'Cancelled'
      * This way a Booking still has a reference to the cancelled Trips ID, even though the Trip itself is gone
+     * I consider this necessary data to keep on behalf of the User
      */
     @RabbitListener(queues = [deleteTripBookingQueue])
     fun deleteTripOnMessage(id: Long) {

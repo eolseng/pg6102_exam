@@ -1,4 +1,4 @@
-package no.id10022.pg6102.trip.dto
+package no.id10022.pg6102.utils.rest.dto
 
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime

@@ -27,14 +27,15 @@ class UserService(
     }
 
     /**
-     * Attempts to retrieve a Trip from the local repository.
+     * Attempts to retrieve a User from the local repository.
      * If the User does not exits we create it.
      * Only safe to call with username verified by Authentication!
      *
      * Todo: Implement verification with Auth Service. Auth must implement username-based check.
      */
-    fun getUserByUsername(username: String): User {
-        return repo.findByIdOrNull(username) ?: createUser(username)
+    fun getUserByUsername(username: String, locked: Boolean): User? {
+        if (!repo.existsById(username)) createUser(username)
+        return if (locked) repo.findWithLock(username) else repo.findByIdOrNull(username)
     }
 
 }
