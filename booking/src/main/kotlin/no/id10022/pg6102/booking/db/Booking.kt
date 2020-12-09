@@ -1,5 +1,6 @@
 package no.id10022.pg6102.booking.db
 
+import no.id10022.pg6102.booking.dto.BookingDto
 import javax.persistence.*
 import javax.validation.constraints.Max
 import javax.validation.constraints.Min
@@ -32,3 +33,7 @@ class Booking(
     var cancelled: Boolean = false
 
 )
+
+fun Booking.toDto(): BookingDto {
+    return BookingDto(id, user.username, trip.id, amount, cancelled)
+}
