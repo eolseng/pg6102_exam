@@ -7,10 +7,9 @@ import no.id10022.pg6102.booking.db.BookingRepository
 import no.id10022.pg6102.booking.db.toDto
 import no.id10022.pg6102.booking.dto.BookingDto
 import no.id10022.pg6102.booking.service.BookingService
-import no.id10022.pg6102.booking.service.TripService
-import no.id10022.pg6102.booking.service.UserService
 import no.id10022.pg6102.utils.rest.RestResponseFactory
 import no.id10022.pg6102.utils.rest.WrappedResponse
+import no.id10022.pg6102.utils.rest.dto.PageDto
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -28,13 +27,11 @@ const val BOOKINGS_API_PATH = "$API_BASE_PATH/bookings"
 )
 class RestApi(
     private val repository: BookingRepository,
-    private val bookingService: BookingService,
-    private val userService: UserService,
-    private val tripService: TripService
+    private val bookingService: BookingService
 ) {
 
-    @ApiOperation("Create a Booking")
     @PostMapping
+    @ApiOperation("Create a Booking")
     fun createBooking(
         @ApiParam("Data for the new Booking")
         @RequestBody dto: BookingDto,
@@ -70,8 +67,8 @@ class RestApi(
         return RestResponseFactory.created(URI.create("$BOOKINGS_API_PATH/${booking.id}"))
     }
 
-    @ApiOperation("Retrieve a specific Booking by the ID")
     @GetMapping("/{id}")
+    @ApiOperation("Retrieve a specific Booking by the ID")
     fun getBookingById(
         @ApiParam("The ID of the Booking to retrieve")
         @PathVariable("id") id: Long,
@@ -87,6 +84,31 @@ class RestApi(
         val dto = booking.toDto()
         // Send the DTO
         return RestResponseFactory.payload(200, dto)
+    }
+
+    @GetMapping
+    @ApiOperation("Retrieve all bookings, sorted by ID")
+    fun getAllBookings(
+        @RequestParam("keysetId", required = false)
+        keysetId: Long?,
+        @RequestParam("amount", required = false)
+        amountParam: Int?,
+        auth: Authentication
+    ): ResponseEntity<WrappedResponse<PageDto<BookingDto>>> {
+        // Set amount if not supplied
+        val amount = amountParam ?: 10
+        // Verify amount is in range
+        if (amount !in 1..1000)
+            return RestResponseFactory.userError("Amount must be between in the range of 1 to 1000")
+        // Fetch Bookings and convert to DTOs
+        val dtos = bookingService.getNextPage(auth.name, keysetId, amount).map { it.toDto() }
+        // Create PageDto with Bookings
+        val page = PageDto(list = dtos)
+        // Set next if more
+        if (dtos.size == amount)
+            page.next = "$BOOKINGS_API_PATH?keysetId=${dtos.last().id}&amount=$amount"
+        // Return the Page
+        return RestResponseFactory.payload(200, page)
     }
 
     /**

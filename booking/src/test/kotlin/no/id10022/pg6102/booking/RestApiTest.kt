@@ -14,6 +14,7 @@ import no.id10022.pg6102.utils.rest.WrappedResponse
 import no.id10022.pg6102.utils.rest.dto.TripDto
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.*
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
@@ -23,7 +24,6 @@ import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -239,6 +239,28 @@ class RestApiTest {
             .body("data.tripId", notNullValue())
             .body("data.amount", equalTo(amount))
             .body("data.cancelled", equalTo(false))
+
+    }
+
+    @Test
+    fun `get all Bookings - single page`() {
+
+        val amount = 10
+        // Register Bookings
+        for (x in 0 until amount) {
+            registerBooking(username = "user", password = "user", mock = true)
+        }
+        // Verify with repository
+        assertEquals(amount, bookingRepository.count().toInt())
+
+        RestAssured.given()
+            .accept(ContentType.JSON)
+            .auth().basic("user", "user")
+            .get("?amount=${amount + 1}")
+            .then().assertThat()
+            .statusCode(200)
+            .body("data.list.size()", equalTo(amount))
+            .body("data.next", nullValue())
 
     }
 

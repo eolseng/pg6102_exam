@@ -37,7 +37,7 @@
         <wiremock.version>2.27.1</wiremock.version>
         <testcontainers.version>1.12.4</testcontainers.version>
         <awaitility.version>4.0.3</awaitility.version>
-        <surefire-failsafe.version>3.0.0-M4</surefire-failsafe.version>
+        <failsafe.version>3.0.0-M4</failsafe.version>
 
         <!-- Misc -->
         <jaxb.version>2.3.1</jaxb.version>
@@ -62,17 +62,6 @@
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
-
-        <!--        Disabled in hopes of not needing -->
-        <!--        &lt;!&ndash; Misc dependencies &ndash;&gt;-->
-        <!--        <dependency>-->
-        <!--            <groupId>javax.xml.bind</groupId>-->
-        <!--            <artifactId>jaxb-api</artifactId>-->
-        <!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.glassfish.jaxb</groupId>-->
-        <!--            <artifactId>jaxb-runtime</artifactId>-->
-        <!--        </dependency>-->
 
         <!-- Test dependencies -->
         <dependency>
@@ -309,7 +298,7 @@
                     <!-- Used for integration tests -->
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>${surefire-failsafe.version}</version>
+                    <version>${failsafe.version}</version>
                     <configuration>
                         <forkCount>1</forkCount>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
