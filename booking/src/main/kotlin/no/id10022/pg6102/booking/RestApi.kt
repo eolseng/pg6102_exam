@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiParam
 import no.id10022.pg6102.booking.db.BookingRepository
 import no.id10022.pg6102.booking.db.toDto
 import no.id10022.pg6102.booking.dto.BookingDto
+import no.id10022.pg6102.booking.dto.Command
+import no.id10022.pg6102.booking.dto.PatchBookingDto
 import no.id10022.pg6102.booking.service.BookingService
 import no.id10022.pg6102.utils.rest.RestResponseFactory
 import no.id10022.pg6102.utils.rest.WrappedResponse
@@ -109,6 +111,43 @@ class RestApi(
             page.next = "$BOOKINGS_API_PATH?keysetId=${dtos.last().id}&amount=$amount"
         // Return the Page
         return RestResponseFactory.payload(200, page)
+    }
+
+    @PatchMapping(
+        path = ["/{id}"],
+        consumes = [(MediaType.APPLICATION_JSON_VALUE)]
+    )
+    @ApiOperation("Update a users Booking")
+    fun patchBooking(
+        @ApiParam("The ID of the Booking to patch")
+        @PathVariable("id") id: Long,
+        @RequestBody dto: PatchBookingDto,
+        auth: Authentication
+    ): ResponseEntity<WrappedResponse<Void>> {
+        // Get Booking
+        val booking = repository.findByIdOrNull(id)
+            ?: return RestResponseFactory.notFound("Could not find Booking with ID $id")
+        // Check that authenticated user is either owner or admin
+        if (!auth.hasRole("ADMIN") && auth.name != booking.user.username)
+            return RestResponseFactory.userError("Cannot patch other users Bookings", 403)
+        // Validate and execute command
+        when (dto.command) {
+            null ->
+                return RestResponseFactory.userError("Invalid data - must contain field 'command'")
+            Command.CANCEL ->
+                bookingService.cancelBooking(id)
+            Command.UPDATE_AMOUNT -> {
+                val newAmount = dto.newAmount
+                    ?: return RestResponseFactory.userError("Invalid data - must contain field 'newAmount'")
+                try {
+                    bookingService.updateAmount(id, newAmount)
+                } catch (e: java.lang.IllegalArgumentException) {
+                    // Failed to update amount on Booking
+                    return RestResponseFactory.userError(e.message.orEmpty())
+                }
+            }
+        }
+        return RestResponseFactory.noPayload(204)
     }
 
     /**

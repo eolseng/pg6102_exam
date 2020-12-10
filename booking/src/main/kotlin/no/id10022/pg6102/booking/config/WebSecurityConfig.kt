@@ -28,6 +28,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
             // Service endpoints
             .antMatchers(HttpMethod.POST, BOOKINGS_API_PATH).authenticated()
             .antMatchers(HttpMethod.GET, "$BOOKINGS_API_PATH*/*").authenticated()
+            .antMatchers(HttpMethod.POST, "$BOOKINGS_API_PATH/*").authenticated()
             .antMatchers("$BOOKINGS_API_PATH*/**").hasRole("ADMIN")
             // Block anything else
             .anyRequest().denyAll()
