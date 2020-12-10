@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.common.ConsoleNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import io.restassured.RestAssured
 import io.restassured.http.ContentType
+import io.restassured.response.Response
 import no.id10022.pg6102.booking.db.BookingRepository
 import no.id10022.pg6102.booking.db.TripRepository
 import no.id10022.pg6102.booking.db.UserRepository
@@ -14,11 +15,11 @@ import no.id10022.pg6102.booking.dto.Command
 import no.id10022.pg6102.booking.dto.PatchBookingDto
 import no.id10022.pg6102.utils.rest.WrappedResponse
 import no.id10022.pg6102.utils.rest.dto.TripDto
+import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -290,6 +291,75 @@ internal class RestApiTest {
             .body("data.list.size()", equalTo(amount))
             .body("data.next", nullValue())
 
+    }
+
+    @Test
+    fun `get all Bookings - multiple page`() {
+
+        val pages = 4
+        val pageSize = 5
+        val total = pages * pageSize
+        val uniqueIds = mutableSetOf<Long>()
+
+        // Register n Trips
+        for (x in 0 until total) {
+            registerBooking(mock = true)
+        }
+        // Verify with repository
+        assertEquals(total, bookingRepository.count().toInt())
+        // Get first page
+        var res = RestAssured.given()
+            .accept(ContentType.JSON)
+            .auth().basic("user", "user")
+            .get("?amount=$pageSize")
+            .then().assertThat()
+            .statusCode(200)
+            .body("data.list.size()", CoreMatchers.equalTo(pageSize))
+            .body("data.next", CoreMatchers.anything())
+            .extract()
+            .response()
+        var dtos = res.getBookings()
+        var next = res.getNextLink()
+        // Add IDs to unique ID list
+        uniqueIds.addAll(dtos.map { it.id!! })
+        // Check the ordering
+        dtos.checkOrder()
+        // Check rest of the pages
+        while (next != null) {
+            res = RestAssured.given()
+                .accept(ContentType.JSON)
+                .auth().basic("user", "user")
+                .basePath("")
+                .get(next)
+                .then().assertThat()
+                .statusCode(200)
+                .extract()
+                .response()
+            dtos = res.getBookings()
+            next = res.getNextLink()
+            // Add IDs to unique ID list
+            uniqueIds.addAll(dtos.map { it.id!! })
+            // Check the ordering
+            dtos.checkOrder()
+        }
+        // Check that all Trips have been retrieved
+        assertEquals(total, uniqueIds.size)
+    }
+
+    fun Response.getBookings(): List<BookingDto> {
+        return this.jsonPath().getList("data.list", BookingDto::class.java)
+    }
+
+    fun Response.getNextLink(): String? {
+        return this.jsonPath().get("data.next")
+    }
+
+    fun List<BookingDto>.checkOrder(asc: Boolean = true) {
+        for (i in 0 until this.size - 1) {
+            val res = this[i].id!! <= this[i + 1].id!!
+            if (asc) assertTrue(res)
+            else assertFalse(res)
+        }
     }
 
     @Test

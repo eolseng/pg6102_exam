@@ -124,7 +124,7 @@ class BookingService(
 
     /**
      * Gets a users Bookings sorted by ID ascending
-     * Uses Keyset/Seek pagination based on only ID
+     * Uses Keyset/Seek pagination based on ID
      */
     fun getNextPage(
         username: String,
