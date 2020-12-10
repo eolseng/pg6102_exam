@@ -29,7 +29,7 @@ class TripService(
 
     val logger: Logger = LoggerFactory.getLogger(TripService::class.java)
 
-    @Value("\${services.address.trip}")
+    @Value("\${services.trip.address}")
     private lateinit var tripUrl: String
     val tripPath = "/api/v1/trip"
 

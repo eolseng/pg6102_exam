@@ -114,7 +114,7 @@ internal class RestApiTest {
         class Initializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
             override fun initialize(configurableApplicationContext: ConfigurableApplicationContext) {
                 // Route requests for Trip Service to WireMock
-                TestPropertyValues.of("services.address.trip=localhost:${wiremockServer.port()}")
+                TestPropertyValues.of("services.trip.address=localhost:${wiremockServer.port()}")
                     .applyTo(configurableApplicationContext.environment)
                 // Setup Redis and RabbitMQ
                 TestPropertyValues.of(

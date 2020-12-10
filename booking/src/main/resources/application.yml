@@ -11,9 +11,9 @@ spring:
 
   # Database
   datasource:
-    url: "jdbc:postgresql://${BOOKING_DB_URL:localhost:5432}/${BOOKING_DB_NAME:postgres}"
-    username: ${BOOKING_DB_USERNAME:postgres}
-    password: ${BOOKING_DB_PASSWORD:""}
+    url: "jdbc:postgresql://${BOOKING_DB_URL}/${BOOKING_DB_NAME}"
+    username: ${BOOKING_DB_USERNAME}
+    password: ${BOOKING_DB_PASSWORD}
     driver-class-name: "org.postgresql.Driver"
   jpa:
     database: "postgresql"
@@ -24,21 +24,21 @@ spring:
   session:
     store-type: redis
   redis:
-    host: ${REDIS_URL:localhost}
-    port: ${REDIS_PORT:6379}
+    host: ${REDIS_URL}
+    port: ${REDIS_PORT}
 
   # Message-Broker
   rabbitmq:
-    host: ${RABBITMQ_URL:localhost}
+    host: ${RABBITMQ_URL}
 
   # Discovery
   cloud:
     consul:
-      host: ${DISCOVERY_URL:localhost}
-      port: ${DISCOVERY_PORT:8500}
+      host: ${DISCOVERY_URL}
+      port: ${DISCOVERY_PORT}
       discovery:
         instance-id: ${spring.application.name}:${random.value}
 
 services:
   address:
-    trip: ${TRIP_SERVICE_NAME:localhost}
+    trip: ${TRIP_SERVICE_NAME}
