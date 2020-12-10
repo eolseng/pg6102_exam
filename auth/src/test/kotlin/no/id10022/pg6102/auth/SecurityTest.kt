@@ -93,7 +93,7 @@ class SecurityTest {
         // Get 201 on successful registration. Should have Location and Set-Cookie header.
         return given().contentType(ContentType.JSON)
             .body(authDto)
-            .post("/signup")
+            .put("/signup/${authDto.username}")
             .then().assertThat()
             .statusCode(201)
             .header("Location", containsString("/api/v1/auth/user"))
@@ -132,7 +132,7 @@ class SecurityTest {
         // Get 400 on failed registration. Body should contain message describing error.
         given().contentType(ContentType.JSON)
             .body(dto)
-            .post("/signup")
+            .put("/signup/${dto.username}")
             .then().assertThat()
             .statusCode(400)
             .body("message", anything())

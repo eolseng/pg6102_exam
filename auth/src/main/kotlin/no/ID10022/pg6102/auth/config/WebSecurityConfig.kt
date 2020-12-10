@@ -2,6 +2,7 @@ package no.id10022.pg6102.auth.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
@@ -42,10 +43,10 @@ class WebSecurityConfig(
             // Swagger endpoints
             .antMatchers("/swagger*/**", "/v3/api-docs").permitAll()
             // Service endpoints
-            .antMatchers("/api/v1/auth/signup").permitAll()
-            .antMatchers("/api/v1/auth/login").permitAll()
-            .antMatchers("/api/v1/auth/logout").permitAll()
-            .antMatchers("/api/v1/auth/user").authenticated()
+            .antMatchers(HttpMethod.PUT, "/api/v1/auth/signup/*").permitAll()
+            .antMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+            .antMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
+            .antMatchers(HttpMethod.GET, "/api/v1/auth/user").authenticated()
             // Block anything else
             .anyRequest().denyAll()
             .and()

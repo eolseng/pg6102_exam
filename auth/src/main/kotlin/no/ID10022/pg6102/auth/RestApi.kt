@@ -2,6 +2,7 @@ package no.id10022.pg6102.auth
 
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import no.id10022.pg6102.auth.db.UserService
 import no.id10022.pg6102.auth.dto.AuthDto
 import no.id10022.pg6102.utils.amqp.authExchangeName
@@ -33,7 +34,7 @@ class RestApi(
     private val rabbitMQ: RabbitTemplate
 ) {
 
-    val logger : Logger = LoggerFactory.getLogger(RestApi::class.java)
+    val logger: Logger = LoggerFactory.getLogger(RestApi::class.java)
 
     @ApiOperation("Retrieve name and roles of signed in user")
     @GetMapping("/user")
@@ -44,13 +45,18 @@ class RestApi(
         return RestResponseFactory.payload(200, map)
     }
 
-    @ApiOperation("Create a new user")
-    @PostMapping(
-        path = ["/signup"],
+    @PutMapping(
+        path = ["/signup/{username}"],
         consumes = [(MediaType.APPLICATION_JSON_VALUE)]
     )
-    fun signup(@RequestBody dto: AuthDto): ResponseEntity<WrappedResponse<Void>> {
-
+    @ApiOperation("Create a new user")
+    fun signup(
+        @ApiParam("Username of user to create")
+        @PathVariable("username") pathUsername: String,
+        @RequestBody dto: AuthDto
+    ): ResponseEntity<WrappedResponse<Void>> {
+        if (dto.username.toLowerCase() != pathUsername.toLowerCase())
+            return RestResponseFactory.userError("Username in path and JSON must match")
         // Extract data from the DTO - lower casing for easier logons
         val username = dto.username.toLowerCase()
         val password = dto.password
