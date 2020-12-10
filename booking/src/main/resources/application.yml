@@ -18,7 +18,7 @@ spring:
   jpa:
     database: "postgresql"
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
 
   # Session
   session:
@@ -41,4 +41,4 @@ spring:
 
 services:
   address:
-    - trip: ${TRIP_SERVICE_NAME:localhost}
+    trip: ${TRIP_SERVICE_NAME:localhost}
