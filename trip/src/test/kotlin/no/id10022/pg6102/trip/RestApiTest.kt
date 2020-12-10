@@ -14,18 +14,27 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.context.ApplicationContextInitializer
+import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
 import java.time.LocalDateTime
 import kotlin.random.Random
 
 @ActiveProfiles("test")
+@Testcontainers
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(
     classes = [(TripApplication::class)],
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
+@ContextConfiguration(initializers = [(RestApiTest.Companion.Initializer::class)])
 class RestApiTest {
 
     @LocalServerPort
@@ -51,6 +60,31 @@ class RestApiTest {
         private var idCounter = 1
         fun getId(): Int {
             return idCounter++
+        }
+
+        // Kotlin wrapper class for GenericContainer
+        class KGenericContainer(imageName: String) : GenericContainer<KGenericContainer>(imageName)
+
+        // Starts a Redis Docker container
+        @Container
+        @JvmField
+        val redis: KGenericContainer = KGenericContainer("redis:latest").withExposedPorts(6379)
+
+        // Starts a RabbitMQ Docker container
+        @Container
+        @JvmField
+        val rabbitMQ: KGenericContainer = KGenericContainer("rabbitmq:3").withExposedPorts(5672)
+
+        class Initializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
+            override fun initialize(configurableApplicationContext: ConfigurableApplicationContext) {
+                // Setup Redis and RabbitMQ
+                TestPropertyValues.of(
+                    "spring.redis.host=${redis.containerIpAddress}",
+                    "spring.redis.port=${redis.getMappedPort(6379)}",
+                    "spring.rabbitmq.host=${rabbitMQ.containerIpAddress}",
+                    "spring.rabbitmq.port=${rabbitMQ.getMappedPort(5672)}"
+                ).applyTo(configurableApplicationContext.environment)
+            }
         }
     }
 

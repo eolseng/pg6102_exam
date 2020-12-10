@@ -5,7 +5,7 @@ import javax.validation.constraints.NotBlank
 
 @Entity
 @Table(name = "USERS")
-class User (
+class User(
 
     @get:Id
     @get:NotBlank

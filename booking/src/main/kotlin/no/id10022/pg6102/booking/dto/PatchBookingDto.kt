@@ -2,7 +2,7 @@ package no.id10022.pg6102.booking.dto
 
 import io.swagger.annotations.ApiModelProperty
 
-enum class Command{
+enum class Command {
     CANCEL,
     UPDATE_AMOUNT
 }

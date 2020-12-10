@@ -129,7 +129,7 @@ class RestApi(
         // Get Booking
         val booking = repository.findByIdOrNull(id)
             ?: return RestResponseFactory.notFound("Could not find Booking with ID $id")
-        // Check that authenticated user is either owner or admin
+        // Must be owner or admin
         if (!auth.hasRole("ADMIN") && auth.name != booking.user.username)
             return RestResponseFactory.userError("Cannot patch other users Bookings", 403)
         // Validate and execute command

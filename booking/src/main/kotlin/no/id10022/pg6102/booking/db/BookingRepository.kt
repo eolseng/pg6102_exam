@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import javax.persistence.LockModeType
 
-interface BookingRepository : JpaRepository<Booking, Long>{
+interface BookingRepository : JpaRepository<Booking, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM Booking b WHERE b.id = :id")
@@ -17,7 +17,7 @@ interface BookingRepository : JpaRepository<Booking, Long>{
      * Sums the Amount column in not-cancelled Bookings on the given Trip
      */
     @Query("SELECT SUM(b.amount) FROM Booking b WHERE b.trip.id = :id AND b.cancelled = false")
-    fun sumBookingAmountByTrip(@Param("id")tripId: Long): Long?
+    fun sumBookingAmountByTrip(@Param("id") tripId: Long): Long?
 
     /**
      * Updates the Booking to 'cancelled' directly in the database
