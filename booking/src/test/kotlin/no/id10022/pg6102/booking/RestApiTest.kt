@@ -36,7 +36,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @ContextConfiguration(initializers = [(RestApiTest.Companion.Initializer::class)])
-class RestApiTest {
+internal class RestApiTest {
 
     @LocalServerPort
     protected var port = 0
