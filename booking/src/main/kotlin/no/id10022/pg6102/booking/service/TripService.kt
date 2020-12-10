@@ -7,6 +7,7 @@ import no.id10022.pg6102.utils.rest.dto.TripDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.repository.findByIdOrNull
@@ -28,7 +29,8 @@ class TripService(
 
     val logger: Logger = LoggerFactory.getLogger(TripService::class.java)
 
-    val tripUrl = (System.getenv("TRIP_SERVICE_NAME") ?: "localhost").trim()
+    @Value("\${services.address.trip}")
+    private lateinit var tripUrl: String
     val tripPath = "/api/v1/trip"
 
     /**

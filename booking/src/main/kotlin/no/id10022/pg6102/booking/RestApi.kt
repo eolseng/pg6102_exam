@@ -89,7 +89,10 @@ class RestApi(
         return RestResponseFactory.payload(200, dto)
     }
 
-    // Utility function to check if Authenticated User has a given role. Use "ADMIN", not "ROLE_ADMIN".
+    /**
+     *  Utility function to check if Authentication has a given role.
+     *  Use "ADMIN", not "ROLE_ADMIN".
+     */
     fun Authentication.hasRole(role: String): Boolean {
         return this.authorities.stream().anyMatch { it.authority == role }
     }

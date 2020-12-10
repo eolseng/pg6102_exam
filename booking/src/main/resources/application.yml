@@ -38,3 +38,7 @@ spring:
       port: ${DISCOVERY_PORT:8500}
       discovery:
         instance-id: ${spring.application.name}:${random.value}
+
+services:
+  address:
+    - trip: ${TRIP_SERVICE_NAME:localhost}
