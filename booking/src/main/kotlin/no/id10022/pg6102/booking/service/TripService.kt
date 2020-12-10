@@ -70,7 +70,7 @@ class TripService(
      */
     fun createTrip(id: Long): Trip {
         val trip = repo.save(Trip(id = id))
-        logger.info("Created Trip[id=$id")
+        logger.info("Created Trip[id=$id]")
         return trip
     }
 
@@ -113,17 +113,18 @@ class TripService(
     }
 
     /**
-     * Verifies the existence of a Trip with the Trip Service.
+     * Verifies the existence of a Trip with the Trip Service using a HEAD message
      * Used as a backup in case it has not been created with an AMQP-message.
      */
     private fun verifyTrip(id: Long): Boolean {
         val uri = URI("http://$tripUrl$tripPath/trips/$id")
+
         return cb.run(
             {
                 try {
                     // Use HEAD request to check with Blueprint Service if Blueprint exists
                     val res = client.exchange(uri, HttpMethod.HEAD, null, String::class.java)
-                    if (!res.statusCode.is2xxSuccessful) {
+                    if (res.statusCode.is2xxSuccessful) {
                         logger.info("Verified with Trip Service: Trip[id=$id]")
                         true
                     } else {

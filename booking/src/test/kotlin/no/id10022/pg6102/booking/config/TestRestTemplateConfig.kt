@@ -6,11 +6,9 @@ import org.springframework.web.client.RestTemplate
 
 @Configuration
 class TestRestTemplateConfig {
-
     // Remove @LoadBalanced since we do not use Consul in tests
     @Bean
     fun client(): RestTemplate {
         return RestTemplate()
     }
-
 }

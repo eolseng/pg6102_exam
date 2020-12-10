@@ -81,7 +81,7 @@ class RestApi(
         val booking = repository.findByIdOrNull(id)
             ?: return RestResponseFactory.notFound("Could not find Booking with ID $id")
         // Check that authenticated user is either owner or admin
-        if (auth.name != booking.user.username && !auth.hasRole("ADMIN"))
+        if (!auth.hasRole("ADMIN") && auth.name != booking.user.username)
             return RestResponseFactory.userError("Cannot retrieve other users Bookings", 403)
         // Convert to DTO
         val dto = booking.toDto()
@@ -94,7 +94,7 @@ class RestApi(
      *  Use "ADMIN", not "ROLE_ADMIN".
      */
     fun Authentication.hasRole(role: String): Boolean {
-        return this.authorities.stream().anyMatch { it.authority == role }
+        return this.authorities.stream().anyMatch { it.authority == "ROLE_$role" }
     }
 
 }

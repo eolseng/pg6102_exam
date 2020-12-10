@@ -42,7 +42,7 @@ class BookingService(
         // Check if Trip has capacity
         val totalCapacity = tripService.getTripCapacity(tripId)
             ?: throw IllegalArgumentException("Failed to retrieve capacity of Trip with ID $tripId")
-        val bookingCount = repo.sumBookingAmountByTrip(tripId)
+        val bookingCount = repo.sumBookingAmountByTrip(tripId) ?: 0
         val available = totalCapacity - bookingCount
         if (amount > available)
             throw IllegalArgumentException("Trip with ID $tripId has only $available slots left")

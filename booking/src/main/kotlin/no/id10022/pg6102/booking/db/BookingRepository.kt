@@ -17,7 +17,7 @@ interface BookingRepository : JpaRepository<Booking, Long>{
      * Sums the Amount column in not-cancelled Bookings on the given Trip
      */
     @Query("SELECT SUM(b.amount) FROM Booking b WHERE b.trip.id = :id AND b.cancelled = false")
-    fun sumBookingAmountByTrip(@Param("id")tripId: Long): Long
+    fun sumBookingAmountByTrip(@Param("id")tripId: Long): Long?
 
     /**
      * Updates the Booking to 'cancelled' directly in the database

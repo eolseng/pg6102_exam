@@ -12,7 +12,6 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationEn
 @Configuration
 @EnableWebSecurity
 class TestWebSecurityConfig : WebSecurityConfig() {
-
     override fun configure(http: HttpSecurity) {
         super.configure(http)
         http
@@ -33,5 +32,4 @@ class TestWebSecurityConfig : WebSecurityConfig() {
             .and()
             .withUser("extra").password("{noop}extra").roles("USER")
     }
-
 }

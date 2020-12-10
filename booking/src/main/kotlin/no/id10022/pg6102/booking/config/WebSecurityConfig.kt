@@ -26,8 +26,8 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
             // API Documentation endpoint
             .antMatchers("/swagger*/**", "/v3/api-docs").permitAll()
             // Service endpoints
-            .antMatchers(HttpMethod.GET, "$BOOKINGS_API_PATH*/**").permitAll()
-            .antMatchers(HttpMethod.HEAD, "$BOOKINGS_API_PATH*/**").permitAll()
+            .antMatchers(HttpMethod.GET, "$BOOKINGS_API_PATH*/**").authenticated()
+            .antMatchers(HttpMethod.POST, "$BOOKINGS_API_PATH*/**").authenticated()
             .antMatchers("$BOOKINGS_API_PATH*/**").hasRole("ADMIN")
             // Block anything else
             .anyRequest().denyAll()
