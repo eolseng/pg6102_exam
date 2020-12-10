@@ -30,9 +30,13 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 
 @ActiveProfiles("test")
+@Testcontainers
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(
     classes = [(BookingApplication::class)],
@@ -76,6 +80,19 @@ internal class RestApiTest {
 
         private lateinit var wiremockServer: WireMockServer
 
+        // Kotlin wrapper class for GenericContainer
+        class KGenericContainer(imageName: String) : GenericContainer<KGenericContainer>(imageName)
+
+        // Starts a Redis Docker container
+        @Container
+        @JvmField
+        val redis: KGenericContainer = KGenericContainer("redis:latest").withExposedPorts(6379)
+
+        // Starts a RabbitMQ Docker container
+        @Container
+        @JvmField
+        val rabbitMQ: KGenericContainer = KGenericContainer("rabbitmq:3").withExposedPorts(5672)
+
         @BeforeAll
         @JvmStatic
         fun initClass() {
@@ -96,8 +113,16 @@ internal class RestApiTest {
 
         class Initializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
             override fun initialize(configurableApplicationContext: ConfigurableApplicationContext) {
+                // Route requests for Trip Service to WireMock
                 TestPropertyValues.of("services.address.trip=localhost:${wiremockServer.port()}")
                     .applyTo(configurableApplicationContext.environment)
+                // Setup Redis and RabbitMQ
+                TestPropertyValues.of(
+                    "spring.redis.host=${redis.containerIpAddress}",
+                    "spring.redis.port=${redis.getMappedPort(6379)}",
+                    "spring.rabbitmq.host=${rabbitMQ.containerIpAddress}",
+                    "spring.rabbitmq.port=${rabbitMQ.getMappedPort(5672)}"
+                ).applyTo(configurableApplicationContext.environment)
             }
         }
     }

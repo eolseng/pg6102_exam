@@ -119,7 +119,7 @@ class RestApi(
         path = ["/{id}"],
         consumes = [(MediaType.APPLICATION_JSON_VALUE)]
     )
-    @ApiOperation("Update a users Booking")
+    @ApiOperation("Update a Booking")
     fun patchBooking(
         @ApiParam("The ID of the Booking to patch")
         @PathVariable("id") id: Long,
