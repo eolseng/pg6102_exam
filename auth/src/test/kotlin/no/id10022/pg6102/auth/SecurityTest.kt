@@ -103,7 +103,7 @@ class SecurityTest {
     }
 
     /**
-     * Utility function to check if the session cookie is valid
+     * Utility function to check if the Session Cookie is valid
      */
     private fun checkAuthenticatedCookie(cookie: String, expectedCode: Int) {
         given().cookie("SESSION", cookie)

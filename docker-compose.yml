@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
 
@@ -61,7 +61,21 @@ services:
       - auth-db-network
 
   # Trip
-  trip:
+  trip_0:
+    build:
+      context: ./trip
+      dockerfile: Dockerfile
+    networks:
+      - service-network
+      - trip-db-network
+    depends_on:
+      - trip-db
+      - redis
+      - rabbitmq
+    env_file:
+      - ./.env
+
+  trip_1:
     build:
       context: ./trip
       dockerfile: Dockerfile

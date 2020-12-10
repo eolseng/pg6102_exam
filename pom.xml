@@ -15,6 +15,7 @@
         <module>gateway</module>
         <module>trip</module>
         <module>booking</module>
+        <module>e2e-tests</module>
     </modules>
 
     <properties>
