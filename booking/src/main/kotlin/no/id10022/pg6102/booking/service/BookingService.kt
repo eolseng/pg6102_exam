@@ -2,13 +2,15 @@ package no.id10022.pg6102.booking.service
 
 import no.id10022.pg6102.booking.db.Booking
 import no.id10022.pg6102.booking.db.BookingRepository
-import no.id10022.pg6102.booking.db.Trip
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import javax.persistence.EntityManager
 import javax.persistence.TypedQuery
+
+const val MIN_BOOKING_AMOUNT = 1
+const val MAX_BOOKING_AMOUNT = Int.MAX_VALUE
 
 @Service
 @Transactional
@@ -37,6 +39,9 @@ class BookingService(
             ?: throw IllegalArgumentException("User with username $username does not exist")
         val trip = tripService.getTripById(tripId, true)
             ?: throw IllegalArgumentException("Trip with ID $tripId does not exist")
+        // Validate amount
+        if (!validateAmount(amount))
+            throw IllegalArgumentException("Amount must be minimum $MIN_BOOKING_AMOUNT and maximum $MAX_BOOKING_AMOUNT")
         // Check if Trip is active
         if (trip.cancelled)
             throw IllegalArgumentException("Trip with ID $tripId is cancelled")
@@ -66,6 +71,9 @@ class BookingService(
         val tripId = booking.trip.id!!
         tripService.getTripById(tripId, true)
             ?: throw IllegalArgumentException("Trip with ID $tripId does not exist")
+        // Validate amount
+        if (!validateAmount(amount))
+            throw IllegalArgumentException("Amount must be minimum $MIN_BOOKING_AMOUNT and maximum $MAX_BOOKING_AMOUNT")
         // Check if Trip has capacity
         val availableCapacity = getAvailableCapacity(tripId)
         if (amount - booking.amount > availableCapacity)
@@ -145,4 +153,11 @@ class BookingService(
         return query.resultList
     }
 
+
+    /**
+     * Validates amount - should be in range of 1 to 100
+     */
+    private fun validateAmount(amount: Int): Boolean {
+        return (amount in MIN_BOOKING_AMOUNT..MAX_BOOKING_AMOUNT)
+    }
 }

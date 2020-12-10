@@ -10,10 +10,13 @@ import no.id10022.pg6102.booking.db.BookingRepository
 import no.id10022.pg6102.booking.db.TripRepository
 import no.id10022.pg6102.booking.db.UserRepository
 import no.id10022.pg6102.booking.dto.BookingDto
+import no.id10022.pg6102.booking.dto.Command
+import no.id10022.pg6102.booking.dto.PatchBookingDto
 import no.id10022.pg6102.utils.rest.WrappedResponse
 import no.id10022.pg6102.utils.rest.dto.TripDto
 import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.*
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.nullValue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.*
@@ -101,13 +104,13 @@ internal class RestApiTest {
 
     /**
      * Utility function to make registration of Bookings easier
-     * Defaults to the 'admin' user and with 1 in amount
+     * Defaults to the 'user' User and with 1 in amount
      * Returns the ID of the created Booking
      */
     fun registerBooking(
         tripId: Long? = null,
-        username: String = "admin",
-        password: String = "admin",
+        username: String = "user",
+        password: String = "user",
         amount: Int = 1,
         tripCapacity: Int = 20,
         mock: Boolean = false
@@ -173,18 +176,18 @@ internal class RestApiTest {
     }
 
     @Test
-    fun `overbook trip`() {
+    fun `register booking - overbook trip`() {
         val tripId = getId().toLong()
         val tripCapacity = 5
         registerBooking(tripId = tripId, amount = tripCapacity, tripCapacity = tripCapacity, mock = true)
 
         val dto = BookingDto(
-            username = "admin",
+            username = "user",
             tripId = tripId,
             amount = 1
         )
         RestAssured.given()
-            .auth().basic("admin", "admin")
+            .auth().basic("user", "user")
             .contentType(ContentType.JSON)
             .body(dto)
             .post()
@@ -261,6 +264,110 @@ internal class RestApiTest {
             .statusCode(200)
             .body("data.list.size()", equalTo(amount))
             .body("data.next", nullValue())
+
+    }
+
+    @Test
+    fun `patch booking - amount valid`() {
+
+        val originalAmount = 5
+        val id = registerBooking(amount = originalAmount, mock = true)
+        val newAmount = originalAmount - 1
+        val dto = PatchBookingDto(Command.UPDATE_AMOUNT, newAmount = newAmount)
+
+        RestAssured.given()
+            .contentType(ContentType.JSON)
+            .auth().basic("user", "user")
+            .body(dto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(204)
+
+        val booking = bookingRepository.findById(id).get()
+        assertEquals(newAmount, booking.amount)
+
+    }
+
+    @Test
+    fun `patch booking - amount overbook`() {
+
+        val tripCapacity = 5
+        val id = registerBooking(amount = tripCapacity, tripCapacity = tripCapacity, mock = true)
+        val newAmount = tripCapacity + 1
+        val dto = PatchBookingDto(Command.UPDATE_AMOUNT, newAmount = newAmount)
+
+        RestAssured.given()
+            .contentType(ContentType.JSON)
+            .auth().basic("user", "user")
+            .body(dto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(400)
+
+        val booking = bookingRepository.findById(id).get()
+        assertEquals(tripCapacity, booking.amount)
+
+    }
+
+    @Test
+    fun `patch booking - cancel`() {
+
+        val id = registerBooking(mock = true)
+        val dto = PatchBookingDto(Command.CANCEL)
+
+        RestAssured.given()
+            .contentType(ContentType.JSON)
+            .auth().basic("user", "user")
+            .body(dto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(204)
+
+        val booking = bookingRepository.findById(id).get()
+        assertTrue(booking.cancelled)
+
+    }
+
+    @Test
+    fun `patch booking - security`() {
+
+        val id = registerBooking(mock = true)
+        val dto = PatchBookingDto(Command.CANCEL)
+
+        // Unauthorized
+        RestAssured.given()
+            .contentType(ContentType.JSON)
+            .body(dto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(401)
+
+        // As valid user
+        RestAssured.given()
+            .contentType(ContentType.JSON)
+            .auth().basic("user", "user")
+            .body(dto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(204)
+
+        // As invalid user
+        RestAssured.given()
+            .contentType(ContentType.JSON)
+            .auth().basic("extra", "extra")
+            .body(dto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(403)
+
+        // As ADMIN
+        RestAssured.given()
+            .contentType(ContentType.JSON)
+            .auth().basic("admin", "admin")
+            .body(dto)
+            .patch("/$id")
+            .then().assertThat()
+            .statusCode(204)
 
     }
 

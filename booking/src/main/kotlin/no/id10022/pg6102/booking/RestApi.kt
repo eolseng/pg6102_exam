@@ -9,6 +9,8 @@ import no.id10022.pg6102.booking.dto.BookingDto
 import no.id10022.pg6102.booking.dto.Command
 import no.id10022.pg6102.booking.dto.PatchBookingDto
 import no.id10022.pg6102.booking.service.BookingService
+import no.id10022.pg6102.booking.service.MAX_BOOKING_AMOUNT
+import no.id10022.pg6102.booking.service.MIN_BOOKING_AMOUNT
 import no.id10022.pg6102.utils.rest.RestResponseFactory
 import no.id10022.pg6102.utils.rest.WrappedResponse
 import no.id10022.pg6102.utils.rest.dto.PageDto
@@ -53,10 +55,10 @@ class RestApi(
                 return RestResponseFactory.userError("Invalid data - cannot register Booking on other users", 403)
             dto.amount == null ->
                 return RestResponseFactory.userError("Invalid data - must contain field 'amount'")
-            dto.amount!! < 1 ->
-                return RestResponseFactory.userError("Invalid data - 'amount' cannot be 0 or negative")
-            dto.amount!! > Int.MAX_VALUE ->
-                return RestResponseFactory.userError("Invalid data - 'amount' cannot be greater than ${Int.MAX_VALUE}")
+            dto.amount!! < MIN_BOOKING_AMOUNT ->
+                return RestResponseFactory.userError("Invalid data - 'amount' cannot be less than $MIN_BOOKING_AMOUNT")
+            dto.amount!! > MAX_BOOKING_AMOUNT ->
+                return RestResponseFactory.userError("Invalid data - 'amount' cannot be greater than $MAX_BOOKING_AMOUNT")
         }
         // Create the Booking
         val booking = try {
@@ -152,7 +154,7 @@ class RestApi(
 
     /**
      *  Utility function to check if Authentication has a given role.
-     *  Use "ADMIN", not "ROLE_ADMIN".
+     *  Use e.g. "ADMIN", not "ROLE_ADMIN".
      */
     fun Authentication.hasRole(role: String): Boolean {
         return this.authorities.stream().anyMatch { it.authority == "ROLE_$role" }
