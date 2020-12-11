@@ -60,3 +60,4 @@ You must also start the backing services in `docker-compose-dev.yml` either thro
 * All requirements, R1 through R5 and T1 through T4, are complete.
 * Admin login for the service uses `admin:admin`
 * The E2E tests does not seem to run properly with `mvn clean install`, but do run properly when started through IntelliJ.
+* I have created direct loadbalanced HTTP calls from Booking to Trips if a Booking Request comes and the Trip does not exist in the Booking Service.
