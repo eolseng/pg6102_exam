@@ -2,6 +2,8 @@
 # Travel Agency - Authentication, Trips & Bookings
 ![Travel Agency Photo - taken by Cristina Gottardi on Unsplash](./docs/travel-agency_by-cristina-gottardi.jpg)
 
+SWITCH `FRONTEND_SERVICE_NAME` IN `.ENV` TO `frontend`
+
 ## Modules
 ### Gateway
 * Spring Cloud Gateway as an entrypoint that routes HTTP-requests to the other services based on path.
