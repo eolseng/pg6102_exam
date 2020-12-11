@@ -126,6 +126,16 @@ services:
     networks:
       - booking-db-network
 
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - service-network
+    env_file:
+      - ./.env
+
 # Networks
 networks:
   service-network:
