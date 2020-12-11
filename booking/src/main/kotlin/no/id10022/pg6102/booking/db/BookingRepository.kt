@@ -27,4 +27,6 @@ interface BookingRepository : JpaRepository<Booking, Long> {
     @Query("UPDATE Booking b SET b.cancelled = true WHERE b.id = :id")
     fun cancelBookingById(@Param("id") id: Long): Int
 
+    fun findBookingByTrip(trip: Trip): List<Booking>
+
 }
