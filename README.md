@@ -2,8 +2,6 @@
 # Travel Agency - Authentication, Trips & Bookings
 ![Travel Agency Photo - taken by Cristina Gottardi on Unsplash](./docs/travel-agency_by-cristina-gottardi.jpg)
 
-SWITCH `FRONTEND_SERVICE_NAME` IN `.ENV` TO `frontend`
-
 ## Modules
 ### Gateway
 * Spring Cloud Gateway as an entrypoint that routes HTTP-requests to the other services based on path.
@@ -17,6 +15,9 @@ SWITCH `FRONTEND_SERVICE_NAME` IN `.ENV` TO `frontend`
 ### Booking
 * Entity Service for CRUD operations on Bookings.
 * Receives AMQP messages on create or cancelled/deleted Trips and on User creation.
+### Frontend
+* Next.JS React frontend for graphical interaction with the API.
+* Supports signup and login, view and delete trips, view, register, update and cancel bookings.
 ### Utils
 * Utility repository for Rest-responses and AMQP configuration
 ### E2E-tests
@@ -39,12 +40,14 @@ For easier development the repository can be started outside of Docker-Compose w
 This allows for faster restart of individual services.
 
 To run the services in 'dev-mode', run `[SERVICE_NAME]DevRunner.kt` located under `[MODULE]/src/test/kotlin/[PACKAGES]/` folder.
+To start the frontend in 'dev mode', navigate to the module and run `npm run dev`. 
 You must also start the backing services in `docker-compose-dev.yml` either through the script `./start-dev.sh` or with the command `docker-compose -f docker-compose-dev.yml up`.
 
 ### Exposed Ports:
 | Service:  | Port: |
 | ---       | ---   |
 | Gateway   | 80    |
+| Frontend  | 3000  |
 | Auth      | 8081  |
 | Trip      | 8082  |
 | Booking   | 8083  |
@@ -56,6 +59,4 @@ You must also start the backing services in `docker-compose-dev.yml` either thro
 ## Notes
 * All requirements, R1 through R5 and T1 through T4, are complete.
 * Admin login for the service uses `admin:admin`
-* The Frontend can register users, log in, view all trips, book trips, update amount on a booking and cancel a booking.
-It is not a very good frontend, but it proves that it is possible to interact with the backend via REST.
 * The E2E tests does not seem to run properly with `mvn clean install`, but do run properly when started through IntelliJ.
