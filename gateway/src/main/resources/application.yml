@@ -8,8 +8,8 @@ spring:
   cloud:
     # Discovery Configuration
     consul:
-      host: ${DISCOVERY_URL:localhost}
-      port: ${DISCOVERY_PORT:8500}
+      host: ${DISCOVERY_URL}
+      port: ${DISCOVERY_PORT}
       discovery:
         instanceId: ${spring.application.name}:${random.value}
 
@@ -32,6 +32,6 @@ spring:
           predicates:
             - Path=/api/v1/booking/**
         - id: Frontend
-            uri: http://${FRONTEND_SERVICE_NAME}:3000
-            predicates:
-              - Path=/**
+          uri: http://${FRONTEND_SERVICE_NAME}:3000
+          predicates:
+            - Path=/**
