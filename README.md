@@ -61,3 +61,6 @@ You must also start the backing services in `docker-compose-dev.yml` either thro
 * Admin login for the service uses `admin:admin`.
 * The environments for the containers started with Docker-Compose are configured with the `.env` file in the project root.
 * I have created direct loadbalanced HTTP calls from Booking to Trips if a Booking Request comes and the Trip does not exist in the Booking Service.
+### Known bugs
+* At time of delivery the Frontend Service was not added to the Docker-Compose file
+* Since the application is running multiple Trip Services, it does create two of each predefined Trip. This is caused by a bad check.
