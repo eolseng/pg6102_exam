@@ -59,5 +59,5 @@ You must also start the backing services in `docker-compose-dev.yml` either thro
 ## Notes
 * All requirements, R1 through R5 and T1 through T4, are complete.
 * Admin login for the service uses `admin:admin`
-* The Docker-Compose containers are configured with the `.env` file in the project root.
+* The environments for the containers started with Docker-Compose are configured with the `.env` file in the project root.
 * I have created direct loadbalanced HTTP calls from Booking to Trips if a Booking Request comes and the Trip does not exist in the Booking Service.
