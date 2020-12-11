@@ -24,7 +24,7 @@ export default function Header() {
     const links = () => {
         // Map of links with [DISPLAY, HREF]
         const linkMap = new Map([
-            ["Blueprints", "/blueprints"],
+            ["Bookings", "/bookings"],
         ])
 
         const links = []
@@ -58,7 +58,7 @@ export default function Header() {
         <Navbar bg={"light"} className={"d-flex justify-content-between align-items-center border-bottom"}>
             <div className={"container"}>
                 <Link href={"/"}>
-                    <Navbar.Brand href={"/"}>LOGO</Navbar.Brand>
+                    <Navbar.Brand href={"/"}>Travel Agency</Navbar.Brand>
                 </Link>
                 <Navbar.Text className={"align-self-center"}>
                     {greeting()}

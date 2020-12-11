@@ -55,5 +55,7 @@ You must also start the backing services in `docker-compose-dev.yml` either thro
 
 ## Notes
 * All requirements, R1 through R5 and T1 through T4, are complete.
-* Admin login for the service uses `admin:admin` 
+* Admin login for the service uses `admin:admin`
+* The Frontend can register users, log in, view all trips, book trips, update amount on a booking and cancel a booking.
+It is not a very good frontend, but it proves that it is possible to interact with the backend via REST.
 * The E2E tests does not seem to run properly with `mvn clean install`, but do run properly when started through IntelliJ.

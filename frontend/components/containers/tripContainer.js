@@ -1,17 +1,18 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import axios from 'axios'
-import BlueprintCard from "../components/cards/BlueprintCard";
+import {TRIP_BASE_PATH} from "../../lib/trip";
+import axios from "axios";
 import Spinner from "react-bootstrap/Spinner";
 import {Button} from "react-bootstrap";
+import TripCard from "../cards/TripCard";
 
-export default function Blueprints() {
+export default function TripContainer() {
 
     // Uses infinite scrolling, but only works once first page is filled.
 
-    const pageSize = 6
+    const pageSize = 6;
 
-    const [blueprints, setBlueprints] = useState([])
-    const [next, setNext] = useState("/api/v1/blueprint/blueprints?amount=" + pageSize)
+    const [trips, setTrips] = useState([])
+    const [next, setNext] = useState(TRIP_BASE_PATH + "/trips?amount?=" + pageSize)
     const [loading, setLoading] = useState(false)
     const [page, setPage] = useState(0)
     const loader = useRef(null)
@@ -53,7 +54,7 @@ export default function Blueprints() {
                     if (data.next) setNext(data.next)
                     else setNext(null)
                     // Add new Blueprints to list
-                    setBlueprints([...blueprints, ...data.list])
+                    setTrips([...trips, ...data.list])
                 })
             setLoading(false)
         }
@@ -61,9 +62,9 @@ export default function Blueprints() {
 
     return (
         <div>
-            <h1>Blueprints</h1>
+            <h1>Trips:</h1>
             <div className={"d-flex flex-wrap"}>
-                {blueprints.map(bp => <BlueprintCard key={bp.id} blueprint={bp}/>)}
+                {trips.map(trip => <TripCard key={trip.id} trip={trip}/>)}
             </div>
             {loading &&
             <Spinner animation={"border"} role={"status"}>
