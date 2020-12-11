@@ -5,6 +5,6 @@ WORKDIR app
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 # Copy over .jar-file
-COPY ./target/gateway.jar .
+COPY ./target/gateway-exec.jar .
 # Defines the entrypoint for the container
-CMD java -jar gateway.jar
+CMD java -jar gateway-exec.jar

@@ -5,6 +5,6 @@ WORKDIR app
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 # Copy over .jar-file
-COPY ./target/booking.jar .
+COPY ./target/booking-exec.jar .
 # Defines the entrypoint for the container
-CMD java -jar booking.jar
+CMD java -jar booking-exec.jar
