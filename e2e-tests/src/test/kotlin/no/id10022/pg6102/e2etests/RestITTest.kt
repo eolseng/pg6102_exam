@@ -5,9 +5,14 @@ import io.restassured.RestAssured
 import io.restassured.http.ContentType
 import io.restassured.response.Response
 import no.id10022.pg6102.auth.dto.AuthDto
+import no.id10022.pg6102.booking.dto.BookingDto
+import no.id10022.pg6102.booking.dto.Command
+import no.id10022.pg6102.booking.dto.PatchBookingDto
 import no.id10022.pg6102.utils.rest.dto.TripDto
 import org.awaitility.Awaitility
+import org.awaitility.pollinterval.FibonacciPollInterval.fibonacci
 import org.hamcrest.CoreMatchers.*
+import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.DockerComposeContainer
@@ -52,11 +57,11 @@ class RestIT {
                 8500,
                 Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(240))
             )
-            .withLogConsumer("gateway") { print("[GATEWAY] ${it.utf8String}") }
-            .withLogConsumer("auth") { print("[AUTH   ] ${it.utf8String}") }
-            .withLogConsumer("trip_0") { print("[TRIP_0 ] ${it.utf8String}") }
-            .withLogConsumer("trip_1") { print("[TRIP_1 ] ${it.utf8String}") }
-            .withLogConsumer("booking") { print("[BOOKING] ${it.utf8String}") }
+            .withLogConsumer("gateway") { print("[${"GATEWAY".padEnd(7)}] ${it.utf8String}") }
+            .withLogConsumer("auth") { print("[${"AUTH".padEnd(7)}] ${it.utf8String}") }
+            .withLogConsumer("trip_0") { print("[${"TRIP_0".padEnd(7)}] ${it.utf8String}") }
+            .withLogConsumer("trip_1") { print("[${"TRIP_1".padEnd(7)}] ${it.utf8String}") }
+            .withLogConsumer("booking") { print("[${"BOOKING".padEnd(7)}] ${it.utf8String}") }
 
         @BeforeAll
         @JvmStatic
@@ -79,7 +84,7 @@ class RestIT {
     /**
      * Utility function to get a registered Session Cookie.
      * Generates a unique UserDto and registers it
-     * @return the authenticated 'SESSION' cookie
+     * @returns the authenticated 'SESSION' cookie
      */
     private fun getRegisteredSessionCookie(): String {
         val authDto = AuthDto(username = "test_username_${getId()}", password = "test_password")
@@ -96,7 +101,8 @@ class RestIT {
     }
 
     /**
-     * Returns a valid Admin Session Cookie
+     * Creates a Admin Session
+     * @returns the authenticated Admin Session Cookie
      */
     private fun getAdminSession(): String {
         val authDto = AuthDto("admin", "admin")
@@ -111,17 +117,33 @@ class RestIT {
     }
 
     /**
+     * Fetches the username of the Session from the Auth Service
+     * @returns the username
+     */
+    private fun getUsername(session: String): String {
+        return RestAssured.given()
+            .cookie("SESSION", session)
+            .get("$AUTH_API_PATH/user")
+            .then().assertThat()
+            .statusCode(200)
+            .extract()
+            .body()
+            .jsonPath()
+            .getString("data.username")
+    }
+
+    /**
      * Utility function to register a Trip
      * Requires a valid Admin Session
      * @return the ID of the created Trip
      */
     private fun registerTrip(
-        adminSession: String,
         startDelay: Long = 0,
         durationInMinutes: Long = Random.nextLong(30, 14440),
         price: Int = Random.nextInt(25, 500),
         capacity: Int = Random.nextInt(1, 20)
     ): Long {
+        val session = getAdminSession()
         // Create the DTO
         val uniqueIdentifier = getId()
         val start = LocalDateTime.now().plusDays(1 + startDelay)
@@ -137,7 +159,7 @@ class RestIT {
         // Register the Trip and extract the Location Header
         val redirect =
             RestAssured.given()
-                .cookie("SESSION", adminSession)
+                .cookie("SESSION", session)
                 .contentType(ContentType.JSON)
                 .body(dto)
                 .post("$TRIP_API_PATH/trips")
@@ -146,15 +168,47 @@ class RestIT {
                 .extract()
                 .header("Location")
         // Extract the ID from the Location Header and return it
-        return redirect.substringAfter("${RestAssured.basePath}/").toLong()
+        return redirect.substringAfter("$TRIP_API_PATH/trips/").toLong()
+    }
+
+    /**
+     * Registers a Booking on the given Trip
+     * @return the ID of the Booking
+     */
+    private fun registerBooking(
+        session: String,
+        tripId: Long,
+        amount: Int = 1
+    ): Long {
+        // Get the username of the session
+        val username = getUsername(session)
+        // Create DTO
+        val dto = BookingDto(
+            username = username,
+            tripId = tripId,
+            amount = amount
+        )
+        // Register the Booking and return the Booking ID
+        val location =
+            RestAssured.given()
+                .contentType(ContentType.JSON)
+                .cookie("SESSION", session)
+                .body(dto)
+                .post("$BOOKING_API_PATH/bookings")
+                .then().assertThat()
+                .statusCode(201)
+                .extract()
+                .header("Location")
+        return location.substringAfter("$BOOKING_API_PATH/bookings/").toLong()
     }
 
     @Test
     fun `auth - user-endpoint - unauthorized`() {
-        Awaitility.await().atMost(120, TimeUnit.SECONDS)
-            .pollInterval(Duration.ofSeconds(10))
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
+                // Unauthorized
                 RestAssured.given()
                     .get("$AUTH_API_PATH/user")
                     .then().assertThat()
@@ -165,10 +219,11 @@ class RestIT {
 
     @Test
     fun `auth - user-endpoint - authenticated`() {
-        Awaitility.await().atMost(120, TimeUnit.SECONDS)
-            .pollInterval(Duration.ofSeconds(10))
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
+                // Authenticated
                 val session = getRegisteredSessionCookie()
                 RestAssured.given()
                     .cookie("SESSION", session)
@@ -180,10 +235,20 @@ class RestIT {
     }
 
     @Test
-    fun `auth - logout`() {
+    fun `auth - register`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+                getRegisteredSessionCookie()
+                true
+            }
+    }
 
-        Awaitility.await().atMost(120, TimeUnit.SECONDS)
-            .pollInterval(Duration.ofSeconds(10))
+    @Test
+    fun `auth - logout`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
                 val session = getRegisteredSessionCookie()
@@ -204,26 +269,26 @@ class RestIT {
 
     @Test
     fun `trip - register trip`() {
-        Awaitility.await().atMost(120, TimeUnit.SECONDS)
-            .pollInterval(Duration.ofSeconds(10))
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
                 val adminSession = getAdminSession()
-                registerTrip(adminSession)
+                registerTrip()
                 true
             }
     }
 
     @Test
-    fun `trip - trips-endpoint - get single trip`() {
-        Awaitility.await().atMost(120, TimeUnit.SECONDS)
-            .pollInterval(Duration.ofSeconds(10))
+    fun `trip - get single trip`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
                 val adminSession = getAdminSession()
                 val price = 789
                 val capacity = 88
-                val id = registerTrip(adminSession = adminSession, price = price, capacity = capacity)
+                val id = registerTrip(price = price, capacity = capacity)
                 RestAssured.given()
                     .accept(ContentType.JSON)
                     .get("$TRIP_API_PATH/trips/$id")
@@ -243,26 +308,25 @@ class RestIT {
     }
 
     @Test
-    fun `trip - trips-endpoint - get multiple trips`() {
-        Awaitility.await().atMost(120, TimeUnit.SECONDS)
-            .pollInterval(Duration.ofSeconds(10))
+    fun `trip - get multiple trips`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
-                val adminSession = getAdminSession()
                 // Register multiple trips - low number to reduce test times
                 val half = 2
                 val amount = half * 2
                 for (x in 0 until amount) {
-                    registerTrip(adminSession)
+                    registerTrip()
                 }
                 // Get all in a single page
                 // Asking for huge page size in case of other tests registering Trips
                 RestAssured.given()
                     .accept(ContentType.JSON)
-                    .get("$TRIP_API_PATH/trips?amount=${amount * 20}")
+                    .get("$TRIP_API_PATH/trips?amount=${amount * 25}")
                     .then().assertThat()
                     .statusCode(200)
-                    .body("data.list.size()", equalTo(amount))
+                    .body("data.list.size()", greaterThan(amount - 1))
                     .body("data.next", nullValue())
 
                 // Get less than all registered pages
@@ -288,13 +352,13 @@ class RestIT {
     }
 
     @Test
-    fun `trip - trips-endpoint - patch`() {
-        Awaitility.await().atMost(120, TimeUnit.SECONDS)
-            .pollInterval(Duration.ofSeconds(10))
+    fun `trip - patch trip`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
                 val adminSession = getAdminSession()
-                val id = registerTrip(adminSession = adminSession)
+                val id = registerTrip()
 
                 // Patch the Trip
                 val durationDays = 1
@@ -309,6 +373,7 @@ class RestIT {
                 val newPrice = 123
                 val newCapacity = 123
 
+                // Create patch DTO
                 val patchDto = ObjectMapper().createObjectNode()
                     .put("title", newTitle)
                     .put("description", newDescription)
@@ -320,7 +385,7 @@ class RestIT {
 
                 // Apply patch
                 RestAssured.given()
-                    .auth().basic("admin", "admin")
+                    .cookie("SESSION", adminSession)
                     .contentType(ContentType.JSON)
                     .body(patchDto)
                     .patch("$TRIP_API_PATH/trips/$id")
@@ -342,6 +407,291 @@ class RestIT {
                     .body("data.duration.minutes", equalTo(durationMinutes))
                     .body("data.price", equalTo(newPrice))
                     .body("data.capacity", equalTo(newCapacity))
+                true
+            }
+    }
+
+    @Test
+    fun `booking - register booking`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+                // Register a Trip
+                val tripId = registerTrip()
+                // Create user and register Booking on trip
+                val session = getRegisteredSessionCookie()
+                registerBooking(session, tripId)
+                true
+            }
+    }
+
+    @Test
+    fun `booking - overbook trip`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+                val capacity = 5
+                // Register a Trip
+                val tripId = registerTrip(capacity = capacity)
+                // Overbook Trip
+                val session = getRegisteredSessionCookie()
+                // Get the username of the session
+                val username = getUsername(session)
+                // Create overbooking Booking
+                val dto = BookingDto(
+                    username = username,
+                    tripId = tripId,
+                    amount = capacity + 1
+                )
+                // Register the Booking and return the Booking ID
+                RestAssured.given()
+                    .contentType(ContentType.JSON)
+                    .cookie("SESSION", session)
+                    .body(dto)
+                    .post("$BOOKING_API_PATH/bookings")
+                    .then().assertThat()
+                    .statusCode(400)
+                true
+            }
+    }
+
+    @Test
+    fun `booking - get single booking - unauthenticated`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+
+                val session = getRegisteredSessionCookie()
+                val tripId = registerTrip()
+                val bookingId = registerBooking(session, tripId)
+
+                // Unauthenticated
+                RestAssured.given()
+                    .accept(ContentType.JSON)
+                    .get("$BOOKING_API_PATH/bookings/$bookingId")
+                    .then().assertThat()
+                    .statusCode(401)
+                true
+            }
+    }
+
+    @Test
+    fun `booking - get single booking - wrong user`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+
+                val session = getRegisteredSessionCookie()
+                val tripId = registerTrip()
+                val bookingId = registerBooking(session, tripId)
+
+                // Wrong user
+                val wrongSession = getRegisteredSessionCookie()
+                RestAssured.given()
+                    .accept(ContentType.JSON)
+                    .cookie("SESSION", wrongSession)
+                    .get("$BOOKING_API_PATH/bookings/$bookingId")
+                    .then().assertThat()
+                    .statusCode(403)
+                true
+            }
+    }
+
+    @Test
+    fun `booking - get single booking - correct user`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+
+                val session = getRegisteredSessionCookie()
+                val username = getUsername(session)
+                val tripId = registerTrip()
+                val bookingId = registerBooking(session, tripId)
+
+                // Correct user
+                RestAssured.given()
+                    .accept(ContentType.JSON)
+                    .cookie("SESSION", session)
+                    .get("$BOOKING_API_PATH/bookings/$bookingId")
+                    .then().assertThat()
+                    .statusCode(200)
+                    .body("data.id", equalTo(bookingId.toInt()))
+                    .body("data.username", equalTo(username))
+                    .body("data.tripId", notNullValue())
+                    .body("data.amount", notNullValue())
+                    .body("data.cancelled", equalTo(false))
+                true
+            }
+    }
+
+    @Test
+    fun `booking - get single booking - as admin`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+
+                val session = getRegisteredSessionCookie()
+                val username = getUsername(session)
+                val tripId = registerTrip()
+                val bookingId = registerBooking(session, tripId)
+
+                // As admin
+                val adminSession = getAdminSession()
+                RestAssured.given()
+                    .accept(ContentType.JSON)
+                    .cookie("SESSION", adminSession)
+                    .get("$BOOKING_API_PATH/bookings/$bookingId")
+                    .then().assertThat()
+                    .statusCode(200)
+                    .body("data.id", equalTo(bookingId.toInt()))
+                    .body("data.username", equalTo(username))
+                    .body("data.tripId", notNullValue())
+                    .body("data.amount", notNullValue())
+                    .body("data.cancelled", equalTo(false))
+                true
+            }
+    }
+
+    @Test
+    fun `booking - get multiple bookings - single page`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+                val session = getRegisteredSessionCookie()
+                val tripId = registerTrip()
+                // Register Bookings
+                val amount = 2
+                for (x in 0 until amount) {
+                    registerBooking(session, tripId)
+                }
+                RestAssured.given()
+                    .accept(ContentType.JSON)
+                    .cookie("SESSION", session)
+                    .get("$BOOKING_API_PATH/bookings?amount=${amount + 1}")
+                    .then().assertThat()
+                    .statusCode(200)
+                    .body("data.list.size()", greaterThan(amount - 1))
+                    .body("data.next", nullValue())
+                true
+            }
+    }
+
+    @Test
+    fun `booking - get multiple bookings - multiple pages`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+                val session = getRegisteredSessionCookie()
+                val tripId = registerTrip()
+                // Register Bookings
+                val half = 2
+                val amount = half * 2
+                for (x in 0 until amount) {
+                    registerBooking(session, tripId)
+                }
+                // Get a full page of 'half' size
+                val res = RestAssured.given()
+                    .accept(ContentType.JSON)
+                    .cookie("SESSION", session)
+                    .get("$BOOKING_API_PATH/bookings?amount=${half}")
+                    .then().assertThat()
+                    .statusCode(200)
+                    .body("data.list.size()", equalTo(half))
+                    .body("data.next", anything())
+                    .extract()
+                    .response()
+                val nextLink = res.getNextLink()
+                // Get the next page
+                RestAssured.given()
+                    .accept(ContentType.JSON)
+                    .cookie("SESSION", session)
+                    .get(nextLink)
+                    .then().assertThat()
+                    .statusCode(200)
+                    .body("data.list.size()", equalTo(half))
+                true
+            }
+    }
+
+    @Test
+    fun `booking - patch amount`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+                val tripId = registerTrip()
+                val session = getRegisteredSessionCookie()
+                val originalAmount = 5
+                val bookingId = registerBooking(session, tripId, originalAmount)
+
+                // Patch the amount on the booking
+                val newAmount = originalAmount - 1
+                val dto = PatchBookingDto(Command.UPDATE_AMOUNT, newAmount = newAmount)
+                RestAssured.given()
+                    .contentType(ContentType.JSON)
+                    .cookie("SESSION", session)
+                    .body(dto)
+                    .patch("$BOOKING_API_PATH/bookings/$bookingId")
+                    .then().assertThat()
+                    .statusCode(204)
+
+                // Confirm updated amount
+                RestAssured.given()
+                    .accept(ContentType.JSON)
+                    .cookie("SESSION", session)
+                    .get("$BOOKING_API_PATH/bookings/${bookingId}")
+                    .then().assertThat()
+                    .statusCode(200)
+                    .body("data.id", equalTo(bookingId.toInt()))
+                    .body("data.amount", equalTo(newAmount))
+
+                true
+            }
+    }
+
+    @Test
+    fun `AMQP - delete trip leads to cancelled bookings`() {
+        Awaitility.await().atMost(145, TimeUnit.SECONDS)
+            .pollInterval(fibonacci(TimeUnit.SECONDS))
+            .ignoreExceptions()
+            .until {
+                val capacity = 5
+                // Register a Trip
+                val tripId = registerTrip(capacity = capacity)
+                // Create some bookings on the trip
+                val session = getRegisteredSessionCookie()
+                val bookingIds = mutableListOf<Long>()
+                for (x in 0 until capacity) {
+                    bookingIds.add(registerBooking(session, tripId, 1))
+                }
+                // Delete the Trip - this should cancel all the Bookings
+                val adminSession = getAdminSession()
+                RestAssured.given()
+                    .cookie("SESSION", adminSession)
+                    .contentType(ContentType.JSON)
+                    .delete("$TRIP_API_PATH/trips/$tripId")
+                    .then().assertThat()
+                    .statusCode(204)
+
+                // Verify that the bookings are now marked as cancelled
+                bookingIds.forEach {
+                    RestAssured.given()
+                        .accept(ContentType.JSON)
+                        .cookie("SESSION", session)
+                        .get("$BOOKING_API_PATH/bookings/${it}")
+                        .then().assertThat()
+                        .statusCode(200)
+                        .body("data.id", equalTo(it.toInt()))
+                        .body("data.cancelled", equalTo(true))
+                }
                 true
             }
     }
