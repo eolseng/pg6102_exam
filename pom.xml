@@ -10,12 +10,12 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>auth</module>
-        <module>utils</module>
         <module>gateway</module>
+        <module>auth</module>
         <module>trip</module>
         <module>booking</module>
         <module>e2e-tests</module>
+        <module>utils</module>
     </modules>
 
     <properties>
@@ -346,6 +346,9 @@
                             <goals>
                                 <goal>repackage</goal>
                             </goals>
+                            <configuration>
+                                <classifier>exec</classifier>
+                            </configuration>
                         </execution>
                     </executions>
                 </plugin>

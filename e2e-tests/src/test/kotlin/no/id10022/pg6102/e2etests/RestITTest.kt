@@ -273,7 +273,6 @@ class RestIT {
             .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
-                val adminSession = getAdminSession()
                 registerTrip()
                 true
             }
@@ -285,7 +284,6 @@ class RestIT {
             .pollInterval(fibonacci(TimeUnit.SECONDS))
             .ignoreExceptions()
             .until {
-                val adminSession = getAdminSession()
                 val price = 789
                 val capacity = 88
                 val id = registerTrip(price = price, capacity = capacity)
